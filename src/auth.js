@@ -5,31 +5,31 @@ const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 
 // WARNING: In a real-world app, use a secret key from .env
-// For this project, we'll use a placeholder for simplicity.
-const JWT_SECRET = 'your_super_secret_key_change_me'; 
+const JWT_SECRET = 'your_super_secret_key'; 
 
 /**
  * Hashes a password using SHA-256 for storage in the database.
- * NOTE: For a production app, use bcrypt or scrypt. We use crypto.createHash for project simplicity.
+ * NOTE: For production, use bcrypt/scrypt. Using crypto.createHash for simplicity.
  */
 function hashPassword(password) {
+    // This is the function used to hash the password for comparison/storage
     return crypto.createHash('sha256').update(password).digest('hex');
 }
 
 /**
- * Generates a JSON Web Token (JWT) containing the user ID and role for subsequent requests.
+ * Generates a JSON Web Token (JWT) for authentication.
  */
 function generateToken(id, role) {
     return jwt.sign({ id, role }, JWT_SECRET, { expiresIn: '1h' });
 }
 
 /**
- * Middleware to verify JWT and attach user info to the request (RBAC foundation).
+ * Middleware to verify JWT and attach user info to the request.
+ * This protects all our Admin and User endpoints.
  */
 function verifyToken(req, res, next) {
     const authHeader = req.headers.authorization;
 
-    // Check if the Authorization header is present and starts with 'Bearer '
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
         return res.status(401).json({ message: 'Access Denied. No token provided.' });
     }
@@ -38,59 +38,46 @@ function verifyToken(req, res, next) {
 
     try {
         const decoded = jwt.verify(token, JWT_SECRET);
-        req.user = decoded; // Attaches { id, role } to the request
+        req.user = decoded; // Attach user info (id, role) to the request
         next();
     } catch (ex) {
-        res.status(400).json({ message: 'Invalid or expired token.' });
+        res.status(400).json({ message: 'Invalid token.' });
     }
-}
-
-/**
- * Middleware that checks if the authenticated user has the 'admin' role.
- */
-function requireAdmin(req, res, next) {
-    // Requires req.user to be set by verifyToken middleware
-    if (!req.user || req.user.role !== 'admin') {
-        // 403 Forbidden status
-        return res.status(403).json({ message: 'Access Denied: Admin privileges required.' });
-    }
-    next();
 }
 
 
 // --- API Handlers ---
 
 /**
- * Handles User/Admin Registration (Inserts into ADMIN or CUSTOMER table).
+ * Handles User/Admin Registration (Feature 1).
+ * Inserts user into ADMIN or CUSTOMER table based on role provided in body.
  */
 async function register(req, res) {
-    // Role is expected in the body to distinguish between ADMIN and CUSTOMER
     const { username, email, password, role } = req.body;
     const hashedPassword = hashPassword(password);
     
-    // Validate input
-    if (!username || !email || !password || !['admin', 'customer'].includes(role)) {
-        return res.status(400).json({ message: 'Missing required fields or invalid role (must be "admin" or "customer").' });
-    }
-
+    // Determine target table and column names based on role
     const table = role === 'admin' ? 'ADMIN' : 'CUSTOMER';
     const usernameField = role === 'admin' ? 'admin_username' : 'customer_username';
     const emailField = role === 'admin' ? 'admin_email' : 'customer_email';
     const passwordField = role === 'admin' ? 'admin_password' : 'customer_password';
-    
-    // Note: The SQL table definitions must match the ADMIN and CUSTOMER tables from your ERD.
+
+    if (!username || !email || !password || !['admin', 'customer'].includes(role)) {
+        return res.status(400).json({ message: 'Missing required fields or invalid role.' });
+    }
+
     const sql = `INSERT INTO ${table} (${usernameField}, ${emailField}, ${passwordField}, created_at) VALUES (?, ?, ?, NOW())`;
 
     try {
         const [result] = await db.query(sql, [username, email, hashedPassword]);
         
+        // Return success
         res.status(201).json({ 
             message: `${role} registered successfully.`, 
             id: result.insertId 
         });
     } catch (error) {
         console.error(`Registration Error for ${role}:`, error);
-        // Handle MySQL duplicate entry errors
         if (error.code === 'ER_DUP_ENTRY') {
             return res.status(409).json({ message: 'Username or email already exists.' });
         }
@@ -99,16 +86,16 @@ async function register(req, res) {
 }
 
 /**
- * Handles User/Admin Login (Verifies credentials and issues a JWT token).
+ * Handles User/Admin Login (Feature 1).
+ * Verifies credentials and issues a JWT token.
  */
 async function login(req, res) {
     const { username, password } = req.body;
     const hashedPassword = hashPassword(password);
 
-    // SQL queries to check both tables for the user with the matching credentials
-    // Note: We check against the HASHED password in the DB
-    const sqlAdmin = `SELECT admin_id AS id, admin_username AS username FROM ADMIN WHERE admin_username = ? AND admin_password = ?`;
-    const sqlCustomer = `SELECT customer_id AS id, customer_username AS username FROM CUSTOMER WHERE customer_username = ? AND customer_password = ?`;
+    // Try finding the user in both ADMIN and CUSTOMER tables
+    const sqlAdmin = `SELECT admin_id AS id, admin_username AS username, admin_password AS password FROM ADMIN WHERE admin_username = ? AND admin_password = ?`;
+    const sqlCustomer = `SELECT customer_id AS id, customer_username AS username, customer_password AS password FROM CUSTOMER WHERE customer_username = ? AND customer_password = ?`;
     
     let user = null;
     let role = null;
@@ -154,5 +141,4 @@ module.exports = {
     register,
     login,
     verifyToken,
-    requireAdmin
 };

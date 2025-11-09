@@ -1,65 +1,74 @@
+// server.js
 const express = require('express');
-const cors = require('cors'); // Required to allow HTML file to talk to the server
+const cors = require('cors');
 const dotenv = require('dotenv');
-const db = require('./src/db'); // MySQL connection pool
-const { register, login, verifyToken } = require('./src/auth'); // Authentication logic
-const { createRoute, getRoutes, createSchedule, requireAdmin } = require('./src/admin'); // Admin logic
 
 // Load environment variables from .env file
 dotenv.config();
 
+// Import Database Connection (db)
+const db = require('./src/db'); 
+
+// Import all API Modules
+const { verifyToken, register, login } = require('./src/auth');
+const { requireAdmin, createRouteAndSchedules, deleteRoute, generateReportSummary } = require('./src/admin');
+const { bookTicket, getBookingHistory, getBookingDetail } = require('./src/booking');
+
+// --- APP SETUP ---
 const app = express();
 const PORT = 3000;
 
-// Middleware setup
-// 1. CORS: Allows requests from the local file system (for testing)
-app.use(cors());
+// Middleware
+app.use(cors()); // Fixes the CORS issue for frontend testing
+app.use(express.json()); // Allows parsing JSON body from requests
 
-// 2. Body Parser: Allows Express to read JSON data from requests
-app.use(express.json());
+// --- PUBLIC ROUTES (No Auth Required) ---
 
-// --- PUBLIC ROUTES ---
-
-// POST /api/auth/register: Registers a new user or admin (Feature 1)
-app.post('/api/auth/register', register);
-
-// POST /api/auth/login: Logs in a user/admin and issues a JWT token
-app.post('/api/auth/login', login);
-
-// GET /api/test-db: Checks connection to the database
+// Test Route: Check database connection status
 app.get('/api/test-db', async (req, res) => {
     try {
-        // Simple query to verify database connection and credentials
-        await db.query('SELECT 1 + 1 AS solution');
+        await db.query('SELECT 1 + 1 AS solution'); 
         res.json({ message: 'Connected to MySQL successfully!' });
     } catch (error) {
-        console.error('Database connection failed:', error);
-        res.status(500).json({ 
-            message: 'Database connection failed. Check your MySQL server status and .env file.',
-            error: error.message 
-        });
+        console.error('Database connection error:', error);
+        res.status(500).json({ message: 'Database connection failed. Check your MySQL server status and .env file.', error: error.message });
     }
 });
 
-// --- PROTECTED ADMIN ROUTES (Require verifyToken and requireAdmin middleware) ---
+// User/Admin Registration and Login (Feature 1)
+app.post('/api/auth/register', register);
+app.post('/api/auth/login', login);
 
-// Route Protection Middleware: All routes below this line require authentication
-// The verifyToken middleware attaches req.user (id, role)
-app.use(verifyToken); 
-
-// POST /api/admin/routes: Creates a new route (e.g., KL to Ipoh)
-app.post('/api/admin/routes', requireAdmin, createRoute);
-
-// GET /api/admin/routes: Retrieves list of all routes (for Admin dashboard display)
-app.get('/api/admin/routes', requireAdmin, getRoutes);
-
-// POST /api/admin/schedules: Creates a new schedule for an existing route (Core Feature 2)
-app.post('/api/admin/schedules', requireAdmin, createSchedule);
+// Public Schedules (for Explore Routes Page)
+// Uses existing logic in src/admin.js (getRoutes) since it queries all routes.
+app.get('/api/public/routes', (req, res) => require('./src/admin').getRoutes(req, res)); // Using direct function import
+app.get('/api/public/schedules/:routeId', (req, res) => require('./src/booking').getSchedulesByRoute(req, res)); // Using logic from booking module
 
 
-// --- Server Initialization ---
+// --- PROTECTED ROUTES (Admin Access Required) ---
 
+// Route & Schedule Management (Feature 2)
+app.post('/api/admin/routes', verifyToken, requireAdmin, createRouteAndSchedules);
+app.delete('/api/admin/routes/:routeId', verifyToken, requireAdmin, deleteRoute);
+
+// Reporting (Feature 4)
+app.get('/api/admin/reports/summary', verifyToken, requireAdmin, generateReportSummary);
+
+
+// --- PROTECTED ROUTES (Customer/User Access Required) ---
+
+// Booking (Feature 3)
+app.post('/api/user/book', verifyToken, bookTicket);
+
+// Booking History
+app.get('/api/user/history', verifyToken, getBookingHistory);
+app.get('/api/user/booking/:bookingId', verifyToken, getBookingDetail);
+
+
+// --- SERVER START ---
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
     console.log(`Test the database connection at: http://localhost:${PORT}/api/test-db`);
 });
+// List users who booked a specific route
+app.get('/api/admin/reports/route-users/:routeId', verifyToken, requireAdmin, (req, res) => require('./src/admin').getUsersByRoute(req, res));
