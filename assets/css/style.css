@@ -1,0 +1,257 @@
+/* Global Styles */
+html, body {
+    height: 100%;
+    min-height: 100vh;
+}
+
+body {
+    font-family: 'Open Sans', sans-serif;
+    background-color: #f8f9fa;
+    color: #333;
+    margin: 0;
+    padding: 0;
+}
+
+h1, h2, h3, h4, h5 {
+    font-family: 'Montserrat', sans-serif;
+}
+
+/* Navbar */
+.navbar-logo img {
+    height: 40px;
+    width: auto;
+}
+
+.navbar-nav .nav-link {
+    color: #000;
+    font-weight: 500;
+    padding: 0.4rem 0.8rem;
+    transition: color 0.3s ease;
+}
+
+.navbar-nav .nav-link.active {
+    font-weight: 600;
+    color: #000;
+}
+
+.navbar-nav .nav-link:hover,
+.custom-icon, 
+.footer a:hover {
+    color: #d7820b; 
+}
+
+/* Banner */
+.banner {
+    position: relative;
+    overflow: hidden;
+    text-align: center;
+    height: 65vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: url('../img/banner.png') center 0.02rem / cover no-repeat; 
+}
+
+/* Overlay */
+.banner::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(40, 21, 77, 0.5); 
+    z-index: 1;
+}
+
+.banner .container {
+    position: relative;
+    z-index: 2;
+}
+
+.banner h1, 
+.banner p {
+    text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.5);
+    color: white;
+}
+
+.lead {
+    color: #d7820b; 
+    font-weight: 500;
+}
+
+.search-bar {
+    background-color: rgba(255, 255, 255, 0.9);
+    border-radius: 20px;
+    max-width: 900px;
+}
+
+.banner .btn-warning {
+    background-color: #d7820b !important; 
+    border-color: #d7820b !important;
+    transition: all 0.3s ease;
+}
+
+.banner .btn-warning:hover {
+    transform: translateY(-2px);
+    background-color: #b86e0d !important;
+    border-color: #b86e0d !important;
+}
+
+
+/* Login/Sign Up Page */
+body.login-page {
+    background: linear-gradient(135deg, #8847ce, #28154d);
+    font-family: 'Open Sans', sans-serif;
+    color: #333;
+}
+
+.login-card {
+    max-width: 400px;
+    width: 100%;
+    border-radius: 12px;
+    background-color: #fff;
+}
+
+.login-card .form-control {
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+}
+
+.login-card .login-logo {
+    display: block;
+    margin: 0 auto; 
+    width: auto;
+    margin-left: 105px; 
+}
+
+.login-card .btn {
+    background-color: #d7820b;
+    border-color: #d7820b;
+    border-radius: 8px;
+    padding: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+.login-card .btn:hover {
+    transform: translateY(-2px);
+    background-color: #b86e0d;
+}
+
+/* Admin Dashboard */
+
+#wrapper {
+    min-height: 100vh;
+    align-items: stretch; 
+}
+
+/* Sidebar */
+.admin-sidebar {
+    width: 250px; 
+    background-color: #3b1b68 !important; 
+    color: #fff;
+    border-right: 1px solid #28154d !important;
+    min-height: 100%; 
+}
+
+.admin-sidebar-nav .list-group-item {
+    color: #f0f0f0;
+    background-color: transparent;
+    border: none;
+    font-weight: 500;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    padding: 0.75rem 1.25rem; 
+}
+
+.admin-sidebar-nav .list-group-item:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+
+/* Active Sidebar Link */
+.admin-sidebar-nav .list-group-item.active {
+    background-color: #d7820b !important; 
+    color: #fff !important;
+    font-weight: 700;
+    border-radius: 0;
+}
+
+.admin-card-green{
+    background-color: rgb(60, 152, 147) !important;
+    color: #fff;
+}
+.admin-card-yellow {
+    background-color: #d7820b !important; 
+    color: #fff;
+}
+
+.admin-card-purple {
+    background-color: #5c359d !important; 
+    color: #fff;
+}
+
+.admin-card-blue {
+    background-color: cornflowerblue !important;
+    color: #fff;
+}
+
+.dashboard-card {
+    border-radius: 12px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.dashboard-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Quick Action Button */
+.admin-btn-dark {
+    background-color: #2c2c2c !important; 
+    border-color: #2c2c2c !important;
+    color: #fff !important;
+}
+
+.admin-btn-dark:hover {
+    background-color: #000000 !important; 
+    border-color: #000000 !important;
+    color: #fff !important;
+}
+
+.btn-purple {
+    background-color: #5c359d !important;
+    border-color: #5c359d !important;
+    color: #fff !important;
+}
+
+.btn-purple:hover {
+    background-color: #3b1b68 !important; 
+    border-color: #3b1b68 !important;
+}
+
+/* Footer */
+.footer {
+    background-color: #3b1b68; 
+    color: #fff; 
+    font-size: 0.95rem;
+}
+
+/* Headings and Paragraphs */
+.footer h6 {
+    color: #d7820b !important; 
+}
+
+.footer p {
+    color: #fff !important; 
+}
+
+.footer a, .footer span, .footer i, .footer .small {
+    text-decoration: none;
+    color: #f0f0f0; 
+    transition: color 0.3s ease;
+}
+
+.footer a:hover {
+    color: #d7820b;
+}

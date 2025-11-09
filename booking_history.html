@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BTB | Booking History</title>
+
+  <!-- Bootsrap Icon -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+  <!-- Bootsrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&family=Open+Sans:wght@400;500&display=swap" rel="stylesheet">
+
+  <!-- External CSS -->
+  <link rel="stylesheet" href="assets/css/style.css">
+<body>
+
+    <header>
+        <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+            <div class="container d-flex justify-content-between align-items-center">
+                <a class="navbar-logo" href="main.html">
+                    <img src="assets/img/btb_logo.png" alt="BTB Logo" class="banner-logo" style="height: 40px;">
+                </a>
+
+                <div class="collapse navbar-collapse justify-content-center" id="navbarNav">
+                    <ul class="navbar-nav">
+                        <li class="nav-item"><a class="nav-link" href="main.html">Home</a></li>
+                        <li class="nav-item"><a class="nav-link" href="routes.html">Routes</a></li>
+                        <li class="nav-item"><a class="nav-link" href="booking.html">Book Ticket</a></li>
+                    </ul>
+                </div>
+
+                <div class="dropdown">
+                    <a href="#" class="d-flex align-items-center text-dark text-decoration-none dropdown-toggle" id="accountMenu" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-person-circle fs-4 me-1"></i> Account
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="accountMenu">
+                        <li class="nav-item"><a class="dropdown-item active" href="booking_history.html">Booking History</a></li>
+                        <li><a class="dropdown-item" href="user_login.html">Log Out</a></li>
+                    </ul>
+                </div>
+                
+                <button class="navbar-toggler ms-2" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container my-5">
+        
+        <div class="d-flex justify-content-between align-items-end mb-4">
+            <h1 class="fw-bold" style="font-family: 'Montserrat', sans-serif; color: #5c359d;">My Booking History</h1>
+            <p class="lead text-muted mb-0">Review your past and upcoming trips.</p>
+        </div>
+        
+        <div class="card shadow-sm p-4">
+            <div class="mb-3">
+                <p class="fw-semibold mb-2">Filters:</p>
+                <div class="d-flex gap-3">
+                    <button class="btn btn-warning text-white btn-sm">Upcoming</button>
+                    <button class="btn btn-outline-secondary btn-sm">Completed</button>
+                    <button class="btn btn-outline-danger btn-sm">Cancelled</button>
+                </div>
+            </div>
+            
+            <div class="table-responsive">
+                <table class="table table-striped table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>Booking ID</th>
+                            <th>Route</th>
+                            <th>Departure Date</th>
+                            <th>Time</th>
+                            <th>Seats</th>
+                            <th>Status</th>
+                            <th>Total Price</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="bookingHistoryTable">
+                        
+                        <tr>
+                            <td>BK1007</td>
+                            <td>KL <i class="bi bi-arrow-right"></i> Johor Bahru</td>
+                            <td>2025-11-25</td>
+                            <td>10:00 AM</td>
+                            <td>2</td>
+                            <td><span class="badge text-bg-secondary fw-semibold">CONFIRMED</span></td>
+                            <td>RM 70.00</td>
+                            <td>
+                                <button class="btn btn-sm btn-info text-white me-2">View Ticket</button>
+                                <button class="btn btn-sm btn-outline-danger">Cancel</button>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td>BK1006</td>
+                            <td>Penang <i class="bi bi-arrow-right"></i> KL</td>
+                            <td>2025-10-10</td>
+                            <td>08:00 AM</td>
+                            <td>1</td>
+                            <td><span class="badge text-bg-secondary fw-semibold">COMPLETED</span></td>
+                            <td>RM 40.00</td>
+                            <td>
+                                <button class="btn btn-sm btn-info text-white me-2">View Ticket</button>
+                                <button class="btn btn-sm btn-outline-secondary" disabled>Review</button>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td>BK1005</td>
+                            <td>Malacca <i class="bi bi-arrow-right"></i> Singapore</td>
+                            <td>2025-12-01</td>
+                            <td>04:00 PM</td>
+                            <td>3</td>
+                            <td><span class="badge text-bg-secondary fw-semibold">CANCELLED</span></td>
+                            <td>RM 195.00</td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-dark" disabled>Refunded</button>
+                            </td>
+                        </tr>
+                        
+                        </tbody>
+                </table>
+            </div>
+            
+        </div>
+        
+    </main>
+
+    <footer class="footer text-dark mt-5">
+        <div class="container py-4">
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <p>BTB is your trusted online bus ticket booking platform offering routes across Malaysia. Fast, reliable, and easy to use.</p>
+                </div>
+
+                <div class="col-md-2 mb-3">
+                    <h6>About</h6>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><i class="bi bi-phone-fill me-2"></i><span>+60 11 234 5678</span></li> 
+                        <li><a href="mailto:btb2@gmail.com"><i class="bi bi-envelope-fill me-2"></i>Contact Email</a></li>
+                    </ul>
+                </div>
+
+                <div class="col-md-2 mb-3">
+                    <h6>Info</h6>
+                    <ul class="list-unstyled">
+                        <li><a href="#">Terms & Conditions</a></li>
+                        <li><a href="#">Privacy Policy</a></li>
+                        <li><a href="#">Cookie Policy</a></li>
+                    </ul>
+                </div>
+
+                <div class="col-md-2 mb-3">
+                    <h6>Partners</h6>
+                    <ul class="list-unstyled">
+                        <li><a href="#">ManaMana Bus</a></li>
+                        <li><a href="#">Gogo Hotels</a></li>
+                    </ul>
+                </div>
+
+                <div class="col-md-2 mb-3">
+                    <h6>Follow Us</h6>
+                    <div class="d-flex gap-3">
+                        <a href="https://www.facebook.com/"><i class="bi bi-facebook"></i></a>
+                        <a href="https://x.com/i/flow/login?lang=en"><i class="bi bi-twitter"></i></a>
+                        <a href="https://www.instagram.com/"><i class="bi bi-instagram"></i></a>
+                    </div>
+                </div>
+            </div>
+            <hr>
+            <div class="text-center small">© 2025 BTB Team. All rights reserved.</div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

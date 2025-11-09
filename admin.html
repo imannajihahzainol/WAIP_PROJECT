@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BTB | Admin Dashboard</title>
+
+    <!-- Bootsrap Icon -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <!-- Bootsrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&family=Open+Sans:wght@400;500&display=swap" rel="stylesheet">
+
+    <!-- External CSS -->
+    <link rel="stylesheet" href="assets/css/style.css">
+    
+    <!-- Chart -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body class="bg-light">
+
+    <div class="d-flex" id="wrapper">   
+        <div class="admin-sidebar" id="sidebar-wrapper">
+            <div class="sidebar-heading border-bottom p-3 text-center" style="background-color: #ebd9ff;">
+                <img src="assets/img/btb_logo.png" alt="BTB Logo" style="height: 40px; filter: drop-shadow(0 0 1px #fff);"> 
+            </div>
+            
+            <div class="list-group list-group-flush admin-sidebar-nav">
+                <a class="list-group-item list-group-item-action p-3 active" href="admin.html">
+                    <i class="bi bi-speedometer2 me-2"></i>Dashboard</a>
+                <a class="list-group-item list-group-item-action p-3" href="manage_routes.html">
+                    <i class="bi bi-geo-alt me-2"></i>Manage Routes</a>
+            </div>
+        </div>
+      
+        <div id="page-content-wrapper" class="flex-grow-1">
+
+            <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom shadow-sm">
+                <div class="container-fluid">
+                    <h5 class="mb-0 fw-bold text-dark">Dashboard Overview</h5>
+                    
+                    <div class="dropdown">
+                        <a href="#" class="d-flex align-items-center text-dark text-decoration-none dropdown-toggle" id="adminMenu" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-person-circle fs-4 me-1"></i> Admin User
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="adminMenu">
+                            <li><a class="dropdown-item" href="#">Settings</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="admin_login.html">Log Out</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </nav>
+
+            <div class="container-fluid p-4 admin-dashboard">
+                <h1 class="mt-4 mb-4 fw-bold">Admin Panel</h1>
+
+                <div class="row g-4">
+                    
+                    <div class="col-lg-3 col-md-6">
+                        <div class="card dashboard-card admin-card-green shadow-sm">
+                            <div class="card-body">
+                                <h5 class="card-title fw-bold">Total Bookings</h5>
+                                <h1 class="display-4 fw-bold" id="totalBookingsCount">...</h1> <p class="card-text small">Since last month</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-lg-3 col-md-6">
+                        <div class="card dashboard-card admin-card-purple shadow-sm">
+                            <div class="card-body">
+                                <h5 class="card-title fw-bold">Active Routes</h5>
+                                <h1 class="display-4 fw-bold" id="activeRoutesCount">...</h1> <p class="card-text small">Bus routes currently running</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-lg-3 col-md-6">
+                        <div class="card dashboard-card text-white admin-card-yellow shadow-sm">
+                            <div class="card-body">
+                                <h5 class="card-title fw-bold">Pending Tickets</h5>
+                                <h1 class="display-4 fw-bold" id="pendingTicketsCount">...</h1> <p class="card-text small">Tickets requiring review</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-lg-3 col-md-6">
+                        <div class="card dashboard-card text-dark admin-card-blue shadow-sm">
+                            <div class="card-body">
+                                <h5 class="card-title fw-bold">New Users</h5>
+                                <h1 class="display-4 fw-bold" id="newUsersCount">...</h1> <p class="card-text small">Registered this week</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <h2 class="mt-5 mb-4 fw-bold">Route Booking Summary</h2>
+                <div class="card shadow-sm mb-4 dashboard-card">
+                    <div class="card-body">
+                        <canvas id="routeBookingChart" style="height: 300px;"></canvas> 
+                    </div>
+                </div>
+                
+                <h2 class="mt-5 mb-4 fw-bold">Recent Bookings</h2>
+                
+                <div class="card shadow-sm mb-4 dashboard-card">
+                    <div class="card-body">
+                        <table class="table table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Booking ID</th>
+                                    <th>Customer</th>
+                                    <th>Route</th>
+                                    <th>Departure Date</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recentBookingsBody">
+                                <tr>
+                                    <td colspan="6" class="text-center text-muted">Loading recent booking data from database...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <h2 class="mt-5 mb-4 fw-bold">Quick Actions</h2>
+                <div class="row g-4 mb-4">
+                    <div class="col-md-4">
+                        <a href="#" class="btn btn-dark w-100 p-3 fw-semibold dashboard-card admin-btn-dark">
+                            <i class="bi bi-plus-circle me-2"></i> Add New Route
+                        </a>
+                    </div>
+                    <div class="col-md-4">
+                        <a href="#" class="btn btn-outline-dark w-100 p-3 fw-semibold dashboard-card">
+                            <i class="bi bi-trash me-2"></i> Clear Ticket History
+                        </a>
+                    </div>
+                    <div class="col-md-4">
+                        <a href="#" class="btn btn-outline-dark w-100 p-3 fw-semibold dashboard-card">
+                            <i class="bi bi-clipboard-data me-2"></i> Generate Report
+                        </a>
+                    </div>
+                </div>
+
+            </div>
+            </div>
+        </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // NOTE TO TEAM: Replace this entire block with code that fetches real data from the backend.
+            
+            // --- Placeholder Data ---
+            const routeData = {
+                labels: ['Route 1', 'Route 2', 'Route 3', 'Route 4'], // REPLACE with actual route names
+                counts: [450, 320, 200, 180] // REPLACE with actual ticket counts
+            };
+            
+            // Bar Colour
+            const chartColors = [
+            '#d7820b',          // 1st Bar Color (Yellow)
+            '#5c359d',          // 2nd Bar Color (Purple)
+            'rgb(60, 152, 147)', // 3rd Bar Color (Green)
+            'cornflowerblue',    // 4th Bar Color (Blue)
+            '#FF00FF'
+          ]
+            // --- Chart Initialization ---
+            const ctx = document.getElementById('routeBookingChart');
+
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: routeData.labels,
+                    datasets: [{
+                        label: 'Tickets Booked',
+                        data: routeData.counts,
+                        backgroundColor: chartColors,
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        title: {
+                            display: true,
+                            text: 'Most Preferred Times'
+                        }
+                    }
+                }
+            });
+            
+            document.getElementById('recentBookingsBody').innerHTML = ''; 
+        });
+    </script>
+</body>
+</html>
