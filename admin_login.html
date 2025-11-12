@@ -21,21 +21,26 @@
 <body class="login-page d-flex justify-content-center align-items-center vh-100">
 
     <div class="container">
-        <div class="login-card p-4 mx-auto shadow-lg">
+        <div class="login-card p-4 mx-auto shadow-lg bg-white">
             
             <div class="text-center mb-4">
                 <img src="assets/img/btb_logo.png" alt="BTB Logo" class="mb-2 login-logo" style="height: 50px;">
                 <h4 class="fw-bold">Administrator Access</h4>
                 <p class="text-muted small">Log in to manage routes and bookings.</p>
             </div>
+            
+            <!-- Error Message Placeholder -->
+            <div id="loginErrorMessage" class="alert alert-danger d-none" role="alert"></div>
 
-            <form action="admin.html" method="POST">
+            <!-- Form updated to link to API endpoint and use ID for AJAX -->
+            <form action="/api/auth/login" method="POST" id="adminLoginForm">
                 
                 <div class="mb-3">
                     <label for="adminUsername" class="form-label visually-hidden">Admin Username</label>
                     <div class="input-group">
                         <span class="input-group-text bg-white border-end-0"><i class="bi bi-person-gear custom-icon"></i></span>
-                        <input type="text" class="form-control border-start-0" id="adminUsername" name="adminUsername" placeholder="Admin Username" required>
+                        <!-- Changed name to 'username' to match API expectation -->
+                        <input type="text" class="form-control border-start-0" id="adminUsername" name="username" placeholder="Admin Username" required>
                     </div>
                 </div>
 
@@ -43,12 +48,14 @@
                     <label for="adminPassword" class="form-label visually-hidden">Password</label>
                     <div class="input-group">
                         <span class="input-group-text bg-white border-end-0"><i class="bi bi-lock custom-icon"></i></span>
-                        <input type="password" class="form-control border-start-0" id="adminPassword" name="adminPassword" placeholder="Password" required>
+                        <!-- Changed name to 'password' to match API expectation -->
+                        <input type="password" class="form-control border-start-0" id="adminPassword" name="password" placeholder="Password" required>
                     </div>
                 </div>
 
-                <button type="submit" class="btn btn-warning w-100 text-white fw-semibold mb-3">
-                    <i class="bi bi-shield-lock me-2"></i>Admin Login
+                <button type="submit" id="loginButton" class="btn btn-warning w-100 text-white fw-semibold mb-3">
+                    <span id="buttonText"><i class="bi bi-shield-lock me-2"></i>Admin Login</span>
+                    <span id="loadingSpinner" class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
                 </button>
             </form>
 
@@ -62,5 +69,64 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Set the base URL for your Express API
+        const API_BASE_URL = 'http://localhost:3000';
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('adminLoginForm');
+            const errorDiv = document.getElementById('loginErrorMessage');
+            const loginButton = document.getElementById('loginButton');
+            const buttonText = document.getElementById('buttonText');
+            const loadingSpinner = document.getElementById('loadingSpinner');
+
+            function showLoading(isLoading) {
+                loginButton.disabled = isLoading;
+                buttonText.classList.toggle('d-none', isLoading);
+                loadingSpinner.classList.toggle('d-none', !isLoading);
+            }
+
+            form.addEventListener('submit', async function(e) {
+                e.preventDefault(); 
+                errorDiv.classList.add('d-none');
+                errorDiv.textContent = '';
+                showLoading(true);
+
+                const username = form.username.value;
+                const password = form.password.value;
+                const payload = { username, password };
+
+                try {
+                    const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        // Check if the role returned from the backend is 'admin'
+                        if (data.role !== 'admin') {
+                            throw new Error('Access Denied: Account is not an administrator.');
+                        }
+                        // Store the token for protected routes
+                        localStorage.setItem('authToken', data.token);
+                        // Redirect to the admin dashboard
+                        window.location.href = 'admin.html';
+                    } else {
+                        // Display error message from the backend
+                        throw new Error(data.message || 'Login failed.');
+                    }
+                } catch (error) {
+                    // Handle network or role error
+                    errorDiv.textContent = error.message.includes('fetch') ? 'Could not connect to server.' : error.message;
+                    errorDiv.classList.remove('d-none');
+                } finally {
+                    showLoading(false);
+                }
+            });
+        });
+    </script>
 </body>
 </html>
