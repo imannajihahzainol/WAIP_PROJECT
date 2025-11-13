@@ -5,16 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BTB | User Sign Up</title>
 
-    <!-- Bootsrap Icon -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
-    <!-- Bootsrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
-    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&family=Open+Sans:wght@400;500&display=swap" rel="stylesheet">
 
-    <!-- External CSS (Assuming assets/css/style.css defines your purple background and card style) -->
     <link rel="stylesheet" href="assets/css/style.css">
     
     <style>
@@ -51,14 +47,12 @@
                 <p class="text-muted small">Join us and start booking your bus tickets!</p>
             </div>
             
-            <!-- Removed method="POST" action="main.html" to handle submission with JS -->
             <form id="signupForm" onsubmit="handleSignup(event)"> 
                 
                 <div class="mb-3">
                     <label for="fullName" class="form-label visually-hidden">Full Name</label>
                     <div class="input-group">
                         <span class="input-group-text bg-white border-end-0"><i class="bi bi-person-badge custom-icon"></i></span>
-                        <!-- Changed name to 'username' to match your auth.js requirement -->
                         <input type="text" class="form-control border-start-0" id="fullName" name="username" placeholder="Full Name (Username)" required>
                     </div>
                 </div>
@@ -87,7 +81,6 @@
                     </div>
                 </div>
                 
-                <!-- Message Container for Errors/Success -->
                 <div id="messageContainer" class="mb-3 text-center small fw-semibold" style="height: 20px;"></div>
 
                 <button type="submit" id="signupButton" class="btn btn-warning w-100 text-white fw-semibold mb-3">
@@ -98,7 +91,7 @@
 
             <div class="text-center mt-3 small">
                 <p class="small text-secondary">
-                    Already have an account? <a href="user_login.html" class="text-decoration-none fw-semibold" style="color: #d7820b;">Login here</a>
+                    Already have an account? <a href="user_login.php" class="text-decoration-none fw-semibold" style="color: #d7820b;">Login here</a>
                 </p>
             </div>
             
@@ -107,7 +100,8 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        const API_BASE_URL = 'http://localhost:3000'; // IMPORTANT: Use your server's host/port
+        // --- REVISED: Use XAMPP path ---
+        const API_BASE_URL = 'http://localhost/WAIP_PROJECT'; 
         const form = document.getElementById('signupForm');
         const messageContainer = document.getElementById('messageContainer');
         const signupButton = document.getElementById('signupButton');
@@ -128,7 +122,7 @@
 
         async function handleSignup(event) {
             event.preventDefault();
-            messageContainer.textContent = ''; // Clear previous messages
+            messageContainer.textContent = ''; 
             
             const username = form.username.value.trim();
             const email = form.email.value.trim();
@@ -144,44 +138,45 @@
             }
 
             // 2. Prepare Payload
-            // The role is hardcoded as 'customer' for the customer sign-up page.
             const payload = {
                 username: username,
                 email: email,
                 password: password,
-                role: 'customer' 
+                // Role is set implicitly by using the customer table
             };
             
             showLoading(true);
 
             // 3. API Call to Backend
             try {
-                const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
+                // --- REVISED: Use correct PHP endpoint ---
+                const response = await fetch(`${API_BASE_URL}/api/register_user.php`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify(payload)
+                    // Send data as JSON, which the PHP script is configured to read
+                    body: JSON.stringify(payload) 
                 });
                 
                 const data = await response.json();
 
-                if (response.ok) {
+                if (response.ok && data.success) { // Check both response status and custom 'success' flag
                     showMessage("Registration successful! Redirecting to login...", false);
-                    // Redirect to the login page after a short delay
+                    
                     setTimeout(() => {
-                        window.location.href = 'user_login.html';
+                        window.location.href = 'user_login.php';
                     }, 1500);
 
                 } else {
-                    // Handle errors from your auth.js (e.g., username/email exists, 409 Conflict)
+                    // Handle errors from the PHP script
                     const errorMessage = data.message || 'Registration failed due to server error.';
                     showMessage(errorMessage, true);
                 }
 
             } catch (error) {
                 console.error('Network Error:', error);
-                showMessage('Could not connect to the server. Check your backend status.', true);
+                showMessage('Could not connect to the server. Check your XAMPP server.', true);
             } finally {
                 showLoading(false);
             }

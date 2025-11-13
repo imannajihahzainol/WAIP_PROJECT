@@ -18,15 +18,15 @@
     <header>
         <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
             <div class="container d-flex justify-content-between align-items-center">
-                <a class="navbar-logo" href="main.html">
+                <a class="navbar-logo" href="main.php">
                     <img src="assets/img/btb_logo.png" alt="BTB Logo" class="banner-logo" style="height: 40px;">
                 </a>
 
                 <div class="collapse navbar-collapse justify-content-center" id="navbarNav">
                     <ul class="navbar-nav">
-                        <li class="nav-item"><a class="nav-link" href="main.html">Home</a></li>
-                        <li class="nav-item"><a class="nav-link active" href="routes.html">Routes</a></li>
-                        <li class="nav-item"><a class="nav-link" href="booking.html">Book Ticket</a></li>
+                        <li class="nav-item"><a class="nav-link" href="main.php">Home</a></li>
+                        <li class="nav-item"><a class="nav-link active" href="routes.php">Routes</a></li>
+                        <li class="nav-item"><a class="nav-link" href="booking.php">Book Ticket</a></li>
                     </ul>
                 </div>
 
@@ -35,8 +35,8 @@
                         <i class="bi bi-person-circle fs-4 me-1"></i> Account
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="accountMenu">
-                        <li><a class="dropdown-item" href="booking_history.html">Booking History</a></li>
-                        <li><a class="dropdown-item" href="user_login.html">Log Out</a></li>
+                        <li><a class="dropdown-item" href="booking_history.php">Booking History</a></li>
+                        <li><a class="dropdown-item" href="user_login.php">Log Out</a></li>
                     </ul>
                 </div>
                 
@@ -135,7 +135,7 @@
                                 <p class="small mb-3">Popular route for cross-border travel with multiple stops.</p>                             
                                 <div class="d-flex justify-content-between align-items-center mb-3">
                                     <span class="fw-bold fs-5" style="color: #5c359d;">From RM 65.00</span></div>                              
-                                <a href="booking.html?route=R-012" class="btn btn-outline-dark fw-semibold w-100"> View Schedules & Book</a>
+                                <a href="booking.php?route=R-012" class="btn btn-outline-dark fw-semibold w-100"> View Schedules & Book</a>
                             </div>
                         </div>
                     </div>
@@ -148,7 +148,7 @@
                                 <p class="small mb-3">Short-haul service perfect for regional commuters.</p>                               
                                 <div class="d-flex justify-content-between align-items-center mb-3">
                                     <span class="fw-bold fs-5" style="color: #5c359d;">From RM 20.00</span></div>                               
-                                <a href="booking.html?route=R-020" class="btn btn-outline-dark fw-semibold w-100">View Schedules & Book</a></div>
+                                <a href="booking.php?route=R-020" class="btn btn-outline-dark fw-semibold w-100">View Schedules & Book</a></div>
                         </div>
                     </div>                   
                     </div>
@@ -214,5 +214,96 @@
   </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+    const API_BASE_URL = 'http://localhost/WAIP_PROJECT'; 
+    const routeListContainer = document.getElementById('routeListContainer');
+
+    document.addEventListener('DOMContentLoaded', function() {
+        fetchRoutes();
+    });
+
+    // Function to render the route cards
+    function renderRouteCards(routes) {
+        routeListContainer.innerHTML = ''; // Clear placeholders
+
+        if (routes.length === 0) {
+            routeListContainer.innerHTML = `
+                <div class="col-12">
+                    <div class="alert alert-info text-center" role="alert">
+                        No active routes found. Check back later!
+                    </div>
+                </div>
+            `;
+            return;
+        }
+
+        routes.forEach(route => {
+            // Split the route name (e.g., "KL Sentral to Penang (Butterworth)") for card title
+            const nameParts = route.route_name.split(' to ');
+            const title = nameParts.length > 1 
+                ? `${nameParts[0]} <i class="bi bi-arrow-right"></i> ${nameParts[1]}` 
+                : route.route_name;
+            
+            // Render the card using the fetched data
+            const cardHtml = `
+                <div class="col-md-6">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-body">
+                            <h4 class="card-title fw-bold" style="color: #d7820b;">${title}</h4>
+                            <p class="card-text text-muted small mt-1 mb-2">Route ID: R-${route.route_id}</p>
+                            <p class="small mb-3">${route.route_desc}</p>
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <span class="fw-bold fs-5" style="color: #5c359d;">From RM ${route.min_price}</span>
+                            </div>
+                            <a href="booking.php?route_id=${route.route_id}" class="btn btn-outline-dark fw-semibold w-100">
+                                View Schedules & Book
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            `;
+            routeListContainer.innerHTML += cardHtml;
+        });
+    }
+
+    // Function to fetch data from the PHP API
+    async function fetchRoutes() {
+        routeListContainer.innerHTML = `
+            <div class="col-12 text-center py-5">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-2 text-muted">Loading routes...</p>
+            </div>
+        `;
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/get_routes.php`);
+            
+            // Check for network error first
+            if (!response.ok) {
+                 throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+
+            if (data.success) {
+                renderRouteCards(data.routes);
+            } else {
+                 throw new Error(data.message || 'Failed to retrieve route data.');
+            }
+
+        } catch (error) {
+            console.error('Error fetching routes:', error);
+            routeListContainer.innerHTML = `
+                <div class="col-12">
+                    <div class="alert alert-danger text-center" role="alert">
+                        Failed to load routes: ${error.message}. Please check your XAMPP server.
+                    </div>
+                </div>
+            `;
+        }
+    }
+</script>
 </body>
 </html>

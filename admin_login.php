@@ -61,7 +61,7 @@
 
             <div class="text-center mt-3 small">
                 <p class="mb-0 text-secondary">
-                    Not an admin? <a href="user_login.html" class="text-decoration-none fw-semibold" style="color: #d7820b;">Return to user login.</a>
+                    Not an admin? <a href="user_login.php" class="text-decoration-none fw-semibold" style="color: #d7820b;">Return to user login.</a>
                 </p>
             </div>
             
@@ -70,63 +70,64 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Set the base URL for your Express API
-        const API_BASE_URL = 'http://localhost:3000';
-        
-        document.addEventListener('DOMContentLoaded', function() {
-            const form = document.getElementById('adminLoginForm');
-            const errorDiv = document.getElementById('loginErrorMessage');
-            const loginButton = document.getElementById('loginButton');
-            const buttonText = document.getElementById('buttonText');
-            const loadingSpinner = document.getElementById('loadingSpinner');
+    // 1. CHANGE: Set the base URL to your project root on XAMPP
+    const API_BASE_URL = 'http://localhost/WAIP_PROJECT'; 
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('adminLoginForm');
+        const errorDiv = document.getElementById('loginErrorMessage');
+        const loginButton = document.getElementById('loginButton');
+        const buttonText = document.getElementById('buttonText');
+        const loadingSpinner = document.getElementById('loadingSpinner');
 
-            function showLoading(isLoading) {
-                loginButton.disabled = isLoading;
-                buttonText.classList.toggle('d-none', isLoading);
-                loadingSpinner.classList.toggle('d-none', !isLoading);
-            }
+        function showLoading(isLoading) {
+            loginButton.disabled = isLoading;
+            buttonText.classList.toggle('d-none', isLoading);
+            loadingSpinner.classList.toggle('d-none', !isLoading);
+        }
 
-            form.addEventListener('submit', async function(e) {
-                e.preventDefault(); 
-                errorDiv.classList.add('d-none');
-                errorDiv.textContent = '';
-                showLoading(true);
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault(); 
+            errorDiv.classList.add('d-none');
+            errorDiv.textContent = '';
+            showLoading(true);
 
-                const username = form.username.value;
-                const password = form.password.value;
-                const payload = { username, password };
+            const username = form.username.value;
+            const password = form.password.value;
+            const payload = { username, password };
 
-                try {
-                    const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
-                    });
+            try {
+                // 2. CHANGE: Use the PHP API endpoint
+                const response = await fetch(`${API_BASE_URL}/api/admin_login.php`, {
+                    method: 'POST',
+                    // Keep headers and JSON.stringify as your JS expects JSON
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload) 
+                });
 
-                    const data = await response.json();
+                const data = await response.json();
 
-                    if (response.ok) {
-                        // Check if the role returned from the backend is 'admin'
-                        if (data.role !== 'admin') {
-                            throw new Error('Access Denied: Account is not an administrator.');
-                        }
-                        // Store the token for protected routes
-                        localStorage.setItem('authToken', data.token);
-                        // Redirect to the admin dashboard
-                        window.location.href = 'admin.html';
-                    } else {
-                        // Display error message from the backend
-                        throw new Error(data.message || 'Login failed.');
-                    }
-                } catch (error) {
-                    // Handle network or role error
-                    errorDiv.textContent = error.message.includes('fetch') ? 'Could not connect to server.' : error.message;
-                    errorDiv.classList.remove('d-none');
-                } finally {
-                    showLoading(false);
+                // 3. CHANGE: Check the 'success' flag from the PHP response
+                if (data.success) {
+                    // Successful login
+                    // Note: PHP uses sessions, so storing a token is optional here,
+                    // but the backend needs to enforce session-based authorization.
+                    
+                    // Redirect to the admin dashboard
+                    window.location.href = 'admin.php';
+                } else {
+                    // Display error message from the backend (data.message)
+                    throw new Error(data.message || 'Login failed. Please check credentials.');
                 }
-            });
+            } catch (error) {
+                // Handle network or script error
+                errorDiv.textContent = error.message.includes('fetch') ? 'Could not connect to server or API path is wrong.' : error.message;
+                errorDiv.classList.remove('d-none');
+            } finally {
+                showLoading(false);
+            }
         });
-    </script>
+    });
+</script>
 </body>
 </html>
