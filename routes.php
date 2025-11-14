@@ -1,3 +1,8 @@
+<?php
+// PHP Session Start and Status Check (if needed, though this file focuses on routes)
+session_start();
+$is_logged_in = isset($_SESSION['customer_logged_in']) && $_SESSION['customer_logged_in'] === true;
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -56,7 +61,7 @@
             <div class="col-lg-3">
                 <div class="card p-3 shadow-sm mb-4">
                     <h5 class="fw-bold mb-3" style="color: #333;">Filter Routes</h5>
-                    <form>
+                    <form id="filterForm">
                         <div class="mb-3">
                             <label for="fromFilter" class="form-label small fw-semibold">Departure City</label>
                             <select class="form-select" id="fromFilter">
@@ -72,6 +77,14 @@
                                 <option>Kuantan</option>
                                 <option>Sg Petani</option>
                                 <option>Pasir Mas</option>
+                                <option>Seri Iskandar</option>
+                                <option>Putrajaya</option>
+                                <option>Pendang</option>
+                                <option>Bentong</option>
+                                <option>Port Dickson</option>
+                                <option>Kangar</option>
+                                <option>Alor Setar</option>
+                                <option>Setiu</option>
                             </select>
                         </div>
                         <div class="mb-3">
@@ -89,6 +102,14 @@
                                 <option>Kuantan</option>
                                 <option>Sg Petani</option>
                                 <option>Pasir Mas</option>
+                                <option>Seri Iskandar</option>
+                                <option>Putrajaya</option>
+                                <option>Pendang</option>
+                                <option>Bentong</option>
+                                <option>Port Dickson</option>
+                                <option>Kangar</option>
+                                <option>Alor Setar</option>
+                                <option>Setiu</option>
                             </select>
                         </div>
                         <button type="submit" class="btn btn-purple w-100 fw-semibold mt-2">
@@ -100,67 +121,11 @@
 
             <div class="col-lg-9">
                 <div class="row g-4" id="routeListContainer">
-                    
-                    <div class="col-md-6">
-                        <div class="card shadow-sm h-100">
-                            <div class="card-body">
-                                <h4 class="card-title fw-bold" style="color: #d7820b;">Kuala Lumpur <i class="bi bi-arrow-right"></i> Johor Bahru</h4>
-                                <p class="card-text text-muted small mt-1 mb-2">Route ID: R-001</p>                  
-                                <p class="small mb-3">Connecting two major cities with multiple daily schedules.</p>                             
-                                <div class="d-flex justify-content-between align-items-center mb-3">
-                                    <span class="fw-bold fs-5" style="color: #5c359d;">From RM 35.00</span></div>                         
-                                <a href="booking.html?route=R-001" class="btn btn-outline-dark fw-semibold w-100">View Schedules & Book</a>
-                            </div>
-                        </div>
                     </div>
-
-                    <div class="col-md-6">
-                        <div class="card shadow-sm h-100">
-                            <div class="card-body">
-                                <h4 class="card-title fw-bold" style="color: #d7820b;">Penang <i class="bi bi-arrow-right"></i> Kuala Lumpur</h4> 
-                                <p class="card-text text-muted small mt-1 mb-2">Route ID: R-005</p>
-                                <p class="small mb-3">Daily express service linking the north to the capital.</p>                                
-                                <div class="d-flex justify-content-between align-items-center mb-3">
-                                    <span class="fw-bold fs-5" style="color: #5c359d;">From RM 40.00</span></div>                             
-                                <a href="booking.html?route=R-005" class="btn btn-outline-dark fw-semibold w-100">View Schedules & Book</a>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="col-md-6">
-                        <div class="card shadow-sm h-100">
-                            <div class="card-body">
-                                <h4 class="card-title fw-bold" style="color: #d7820b;">Malacca <i class="bi bi-arrow-right"></i> Singapore</h4>                     
-                                <p class="card-text text-muted small mt-1 mb-2">Route ID: R-012</p>                               
-                                <p class="small mb-3">Popular route for cross-border travel with multiple stops.</p>                             
-                                <div class="d-flex justify-content-between align-items-center mb-3">
-                                    <span class="fw-bold fs-5" style="color: #5c359d;">From RM 65.00</span></div>                              
-                                <a href="booking.php?route=R-012" class="btn btn-outline-dark fw-semibold w-100"> View Schedules & Book</a>
-                            </div>
-                        </div>
-                    </div>
-                  
-                    <div class="col-md-6">
-                        <div class="card shadow-sm h-100">
-                            <div class="card-body">
-                                <h4 class="card-title fw-bold" style="color: #d7820b;">Ipoh <i class="bi bi-arrow-right"></i> Butterworth</h4>                                
-                                <p class="card-text text-muted small mt-1 mb-2">Route ID: R-020</p>                              
-                                <p class="small mb-3">Short-haul service perfect for regional commuters.</p>                               
-                                <div class="d-flex justify-content-between align-items-center mb-3">
-                                    <span class="fw-bold fs-5" style="color: #5c359d;">From RM 20.00</span></div>                               
-                                <a href="booking.php?route=R-020" class="btn btn-outline-dark fw-semibold w-100">View Schedules & Book</a></div>
-                        </div>
-                    </div>                   
-                    </div>
-                
+            
                 <nav class="mt-5">
                     <ul class="pagination justify-content-center">
-                        <li class="page-item disabled"><a class="page-link" href="#">Previous</a></li>
-                        <li class="page-item active" style="z-index: 1;"><a class="page-link" href="#" style="background-color: #d7820b; border-color: #d7820b;">1</a></li>
-                        <li class="page-item"><a class="page-link" href="#">2</a></li>
-                        <li class="page-item"><a class="page-link" href="#">3</a></li>
-                        <li class="page-item"><a class="page-link" href="#">Next</a></li>
-                    </ul>
+                        </ul>
                 </nav>
             </div>
         </div>
@@ -176,11 +141,11 @@
         </div>
 
         <div class="col-md-2 mb-3">
-         <h6>Contact</h6>
-         <ul class="list-unstyled">
-           <li class="mb-2"><i class="bi bi-phone-fill me-2"></i><span>+60 11 234 5678</span></li> 
+          <h6>Contact</h6>
+          <ul class="list-unstyled">
+            <li class="mb-2"><i class="bi bi-phone-fill me-2"></i><span>+60 11 234 5678</span></li> 
           <li><a href="mailto:btb2@gmail.com"><i class="bi bi-envelope-fill me-2"></i>btb2@gmail.com</a></li>
-         </ul>
+          </ul>
         </div>
 
         <div class="col-md-2 mb-3">
@@ -217,20 +182,107 @@
     <script>
     const API_BASE_URL = 'http://localhost/WAIP_PROJECT'; 
     const routeListContainer = document.getElementById('routeListContainer');
+    const paginationContainer = document.querySelector('.pagination'); 
+    
+    // Select filter elements
+    const filterForm = document.getElementById('filterForm');
+    const fromFilter = document.getElementById('fromFilter');
+    const toFilter = document.getElementById('toFilter');
+    
+    // Get URL parameters sent from main.php
+    const urlParams = new URLSearchParams(window.location.search);
+    const initialFrom = urlParams.get('from') || '';
+    const initialTo = urlParams.get('to') || '';
+
+    // --- INITIAL LOAD & FORM SUBMISSION ---
 
     document.addEventListener('DOMContentLoaded', function() {
-        fetchRoutes();
+        
+        // 1. Pre-fill filters from URL parameters
+        // This checks if the URL parameter matches an available option before setting
+        if (initialFrom && Array.from(fromFilter.options).some(opt => opt.value === initialFrom)) {
+            fromFilter.value = initialFrom;
+        }
+        if (initialTo && Array.from(toFilter.options).some(opt => opt.value === initialTo)) {
+            toFilter.value = initialTo;
+        }
+
+        // 2. Initial load of routes (Will automatically use the pre-filled values)
+        fetchRoutes(1); 
+        
+        // 3. Add event listener for the filter form submission
+        filterForm.addEventListener('submit', function(e) {
+            e.preventDefault(); 
+            // When filters are applied (or re-applied), always start from page 1
+            fetchRoutes(1); 
+        });
     });
 
-    // Function to render the route cards
+    // --- CORE PAGINATION AND FETCH FUNCTION ---
+
+    async function fetchRoutes(page = 1) {
+        routeListContainer.innerHTML = `
+            <div class="col-12 text-center py-5">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-2 text-muted">Loading routes...</p>
+            </div>
+        `;
+        paginationContainer.innerHTML = ''; 
+        
+        // Get current filter values (either pre-filled from URL or manually selected)
+        const fromCity = fromFilter.value !== 'Select City' ? fromFilter.value : '';
+        const toCity = toFilter.value !== 'Select City' ? toFilter.value : '';
+        
+        // Build query string with pagination and filter parameters
+        const params = new URLSearchParams({
+            page: page,
+            from: fromCity,
+            to: toCity
+        });
+        
+        try {
+            const url = `${API_BASE_URL}/api/get_routes.php?${params.toString()}`;
+            const response = await fetch(url);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+
+            if (data.success) {
+                renderRouteCards(data.routes);
+                // CRITICAL: Ensure data.total_pages and data.current_page exist
+                renderPagination(data.current_page, data.total_pages); 
+            } else {
+                throw new Error(data.message || 'Failed to retrieve route data.');
+            }
+
+        } catch (error) {
+            console.error('Error fetching routes:', error);
+            routeListContainer.innerHTML = `
+                <div class="col-12">
+                    <div class="alert alert-danger text-center" role="alert">
+                        Failed to load routes: ${error.message}. Please check your XAMPP server.
+                    </div>
+                </div>
+            `;
+            paginationContainer.innerHTML = ''; 
+        }
+    }
+
+    // --- HELPER FUNCTIONS ---
+
     function renderRouteCards(routes) {
-        routeListContainer.innerHTML = ''; // Clear placeholders
+        routeListContainer.innerHTML = ''; 
 
         if (routes.length === 0) {
             routeListContainer.innerHTML = `
                 <div class="col-12">
                     <div class="alert alert-info text-center" role="alert">
-                        No active routes found. Check back later!
+                        No routes found matching your criteria.
                     </div>
                 </div>
             `;
@@ -238,13 +290,11 @@
         }
 
         routes.forEach(route => {
-            // Split the route name (e.g., "KL Sentral to Penang (Butterworth)") for card title
             const nameParts = route.route_name.split(' to ');
             const title = nameParts.length > 1 
                 ? `${nameParts[0]} <i class="bi bi-arrow-right"></i> ${nameParts[1]}` 
                 : route.route_name;
             
-            // Render the card using the fetched data
             const cardHtml = `
                 <div class="col-md-6">
                     <div class="card shadow-sm h-100">
@@ -253,7 +303,7 @@
                             <p class="card-text text-muted small mt-1 mb-2">Route ID: R-${route.route_id}</p>
                             <p class="small mb-3">${route.route_desc}</p>
                             <div class="d-flex justify-content-between align-items-center mb-3">
-                                <span class="fw-bold fs-5" style="color: #5c359d;">From RM ${route.min_price}</span>
+                                <span class="fw-bold fs-5" style="color: #5c359d;">From RM ${route.min_price}</span> 
                             </div>
                             <a href="booking.php?route_id=${route.route_id}" class="btn btn-outline-dark fw-semibold w-100">
                                 View Schedules & Book
@@ -266,43 +316,47 @@
         });
     }
 
-    // Function to fetch data from the PHP API
-    async function fetchRoutes() {
-        routeListContainer.innerHTML = `
-            <div class="col-12 text-center py-5">
-                <div class="spinner-border text-primary" role="status">
-                    <span class="visually-hidden">Loading...</span>
-                </div>
-                <p class="mt-2 text-muted">Loading routes...</p>
-            </div>
-        `;
+    function renderPagination(currentPage, totalPages) {
+        paginationContainer.innerHTML = ''; 
+        
+        if (totalPages <= 1) return; 
 
-        try {
-            const response = await fetch(`${API_BASE_URL}/api/get_routes.php`);
+        const createPageItem = (text, pageNumber, isActive = false, isDisabled = false) => {
+            const li = document.createElement('li');
+            li.className = `page-item ${isActive ? 'active' : ''} ${isDisabled ? 'disabled' : ''}`;
             
-            // Check for network error first
-            if (!response.ok) {
-                 throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            const data = await response.json();
-
-            if (data.success) {
-                renderRouteCards(data.routes);
+            const a = document.createElement('a');
+            a.className = 'page-link';
+            a.href = '#';
+            a.innerHTML = text;
+            
+            if (isActive) {
+                li.style.zIndex = '1';
+                a.style.backgroundColor = '#d7820b';
+                a.style.borderColor = '#d7820b';
+                a.style.color = '#fff'; 
             } else {
-                 throw new Error(data.message || 'Failed to retrieve route data.');
+                a.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    if (!isDisabled) {
+                        fetchRoutes(pageNumber); 
+                    }
+                });
             }
+            
+            li.appendChild(a);
+            return li;
+        };
 
-        } catch (error) {
-            console.error('Error fetching routes:', error);
-            routeListContainer.innerHTML = `
-                <div class="col-12">
-                    <div class="alert alert-danger text-center" role="alert">
-                        Failed to load routes: ${error.message}. Please check your XAMPP server.
-                    </div>
-                </div>
-            `;
+        const prevPage = currentPage > 1 ? currentPage - 1 : 1;
+        paginationContainer.appendChild(createPageItem('Previous', prevPage, false, currentPage === 1));
+
+        for (let i = 1; i <= totalPages; i++) {
+            paginationContainer.appendChild(createPageItem(i, i, i === currentPage));
         }
+        
+        const nextPage = currentPage < totalPages ? currentPage + 1 : totalPages;
+        paginationContainer.appendChild(createPageItem('Next', nextPage, false, currentPage === totalPages));
     }
 </script>
 </body>

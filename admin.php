@@ -4,7 +4,8 @@ session_start();
 
 // Check if the admin is logged in (using the session variable set during admin_login)
 if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
-    header('Location: admin_login.html'); // Redirect to login page if unauthorized
+    // Corrected redirect
+    header('Location: admin_login.php'); 
     exit; 
 }
 
@@ -123,12 +124,11 @@ $admin_username = $_SESSION['admin_username'] ?? 'Admin User'; // Assuming you s
                                     <th>Route</th>
                                     <th>Departure Date</th>
                                     <th>Status</th>
-                                    <th>Action</th>
-                                </tr>
+                                    </tr>
                             </thead>
                             <tbody id="recentBookingsBody">
                                 <tr>
-                                    <td colspan="6" class="text-center text-muted">Loading recent booking data from database...</td>
+                                    <td colspan="5" class="text-center text-muted">Loading recent booking data from database...</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -169,22 +169,27 @@ $admin_username = $_SESSION['admin_username'] ?? 'Admin User'; // Assuming you s
             newUsersCount: document.getElementById('newUsersCount')
         };
         const recentBookingsBody = document.getElementById('recentBookingsBody');
-
+        const BOOKING_DETAIL_PAGE = 'booking_details_admin.php'; 
 
         document.addEventListener('DOMContentLoaded', function() {
             fetchDashboardData();
-            // Optional: Fetch recent booking list (placeholder, requires a separate API for the table)
-            // fetchRecentBookings(); 
+            fetchRecentBookings(); 
         });
+        
+        // --- Cancellation/Edit Listener Removed ---
+        // The event listener on recentBookingsBody is removed since the buttons are no longer rendered.
 
+        // --- Cancellation Function for Admin (REMOVED: The logic is now unnecessary for this file) ---
+        // async function cancelBookingAdmin(bookingId) { /* ... */ } 
+        
+        // --- Core Data Fetch Functions (Unchanged) ---
+        
         async function fetchDashboardData() {
             try {
-                // Call the Admin Reports API
                 const response = await fetch(`${API_BASE_URL}/api/get_admin_reports.php`);
                 
-                // Handle unauthorized access (if session expired)
                 if (response.status === 401) {
-                     window.location.href = 'admin_login.php';
+                     window.location.href = 'admin_login.php'; // Corrected to .php
                      return;
                 }
 
@@ -193,35 +198,92 @@ $admin_username = $_SESSION['admin_username'] ?? 'Admin User'; // Assuming you s
                 if (data.success && data.data) {
                     const reportData = data.data;
 
-                    // 1. Update Cards
                     dashboardCards.totalBookingsCount.textContent = reportData.totalBookingsCount;
                     dashboardCards.activeRoutesCount.textContent = reportData.activeRoutesCount;
                     dashboardCards.pendingTicketsCount.textContent = reportData.pendingTicketsCount;
                     dashboardCards.newUsersCount.textContent = reportData.newUsersCount;
 
-                    // 2. Prepare Chart Data (Result Aggregation)
                     const chartLabels = reportData.routeSummary.map(r => r.route_name);
-                    // Ensure the data is numeric for the chart
                     const chartCounts = reportData.routeSummary.map(r => parseInt(r.total_seats_booked));
 
                     renderChart(chartLabels, chartCounts);
                 } else {
                      console.error("API Error:", data.message);
-                     alert("Failed to load dashboard data.");
+                     Object.values(dashboardCards).forEach(el => el.textContent = 'Err');
                 }
 
             } catch (error) {
                 console.error('Fetch Error:', error);
-                // Set card status to indicate failure
-                Object.values(dashboardCards).forEach(el => el.textContent = 'Err');
+                Object.values(dashboardCards).forEach(el => el.textContent = 'Fail');
             }
         }
         
-        // --- Chart Initialization Function ---
+        // --- IMPLEMENTATION: Function to fetch and render the recent bookings table (MODIFIED) ---
+        async function fetchRecentBookings() {
+            recentBookingsBody.innerHTML = '<tr><td colspan="5" class="text-center text-muted"><span class="spinner-border spinner-border-sm me-2"></span> Loading...</td></tr>';
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/get_recent_bookings.php`);
+                
+                if (response.status === 401) {
+                     window.location.href = 'admin_login.php';
+                     return;
+                }
+
+                const data = await response.json();
+
+                if (data.success && data.data) {
+                    renderRecentBookingsTable(data.data);
+                } else {
+                    recentBookingsBody.innerHTML = `<tr><td colspan="5" class="text-center text-danger">Failed to load bookings. ${data.message || ''}</td></tr>`;
+                }
+
+            } catch (error) {
+                console.error('Recent Bookings Fetch Error:', error);
+                recentBookingsBody.innerHTML = '<tr><td colspan="5" class="text-center text-danger">Network Error loading recent bookings.</td></tr>';
+            }
+        }
+        
+        // --- Rendering Function for the Recent Bookings Table (MODIFIED) ---
+        function renderRecentBookingsTable(bookings) {
+            // Updated colspan count from 6 to 5
+            if (bookings.length === 0) {
+                recentBookingsBody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">No recent bookings found.</td></tr>';
+                return;
+            }
+
+            recentBookingsBody.innerHTML = ''; 
+
+            bookings.forEach(booking => {
+                const statusBadge = getStatusBadge(booking.booking_status);
+                
+                const row = `
+                    <tr>
+                        <td>${booking.display_id}</td>
+                        <td>${booking.customer_name}</td>
+                        <td>${booking.route_name}</td>
+                        <td>${booking.depart_date}</td>
+                        <td>${statusBadge}</td>
+                        </tr>
+                `;
+                recentBookingsBody.insertAdjacentHTML('beforeend', row);
+            });
+        }
+
+        // --- Helper Function for Status Badge Styling (Unchanged) ---
+        function getStatusBadge(status) {
+            status = status.toUpperCase();
+            let color = 'secondary';
+            if (status === 'CONFIRMED') color = 'success';
+            else if (status === 'COMPLETED') color = 'primary';
+            else if (status === 'CANCELLED') color = 'danger';
+            return `<span class="badge text-bg-${color} fw-semibold">${status}</span>`;
+        }
+        
+        // --- Chart Initialization Function (Unchanged) ---
         function renderChart(labels, counts) {
             const ctx = document.getElementById('routeBookingChart');
             
-            // Bar Colour
             const chartColors = [
                 '#d7820b', 
                 '#5c359d', 
@@ -230,7 +292,6 @@ $admin_username = $_SESSION['admin_username'] ?? 'Admin User'; // Assuming you s
                 '#FF00FF'
             ];
             
-            // Destroy any existing chart instance before creating a new one
             if (window.myChart) {
                 window.myChart.destroy();
             }
@@ -238,7 +299,7 @@ $admin_username = $_SESSION['admin_username'] ?? 'Admin User'; // Assuming you s
             window.myChart = new Chart(ctx, {
                 type: 'bar',
                 data: {
-                    labels: labels, // Routes
+                    labels: labels, 
                     datasets: [{
                         label: 'Total Seats Booked',
                         data: counts, 
@@ -259,21 +320,12 @@ $admin_username = $_SESSION['admin_username'] ?? 'Admin User'; // Assuming you s
                         },
                         title: {
                             display: true,
-                            text: 'Top 5 Routes by Total Seats Booked'
+                            text: 'Top Routes by Seats Booked'
                         }
                     }
                 }
             });
         }
-        
-        // --- Placeholder for Recent Bookings Table (Requires separate API) ---
-        function fetchRecentBookings() {
-             // This function should call an API (e.g., /api/get_recent_bookings.php)
-             // to fetch the latest bookings and populate the 'recentBookingsBody' table.
-             // Since this wasn't explicitly developed, we leave the placeholder status.
-             recentBookingsBody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">API required for recent bookings list.</td></tr>';
-        }
-
     </script>
 </body>
 </html>

@@ -1,11 +1,9 @@
 <?php
 session_start();
-// CORRECTED PATH: Step up one directory to find db_config.php
 require_once '../db_config.php'; 
 
 header('Content-Type: application/json');
 
-// Function to safely output JSON response and set HTTP status code
 function sendResponse($success, $message, $http_code, $bookings = []) {
     http_response_code($http_code);
     echo json_encode(['success' => $success, 'message' => $message, 'bookings' => $bookings]);
@@ -18,9 +16,10 @@ if (!isset($_SESSION['customer_logged_in']) || $_SESSION['customer_logged_in'] !
 }
 
 $customer_id = $_SESSION['customer_id'];
-$status_filter = $_GET['status'] ?? null; // Optional filter (CONFIRMED, COMPLETED, CANCELLED, or null for all)
+$status_filter = $_GET['status'] ?? null; 
+$status_filter = strtoupper(trim($status_filter));
 
-// 2. Base SQL Query: Join Bookings (B) with Schedules (S) and Routes (R)
+// 2. Base SQL Query
 $sql = "SELECT 
             B.booking_id,
             B.seat_num,
@@ -32,17 +31,23 @@ $sql = "SELECT
         FROM BOOKINGS B
         JOIN SCHEDULES S ON B.schedule_id = S.schedule_id
         JOIN ROUTES R ON S.route_id = R.route_id
-        WHERE B.customer_id = ? ";
+        WHERE B.customer_id = ?";
 
-// 3. Apply status filter if provided
+// 3. Apply status filter logic
 $params = [$customer_id];
 $types = "i";
 
-if (!empty($status_filter)) {
-    // Basic sanitization on the status filter
-    $status_filter = strtoupper($status_filter);
+if ($status_filter === 'CONFIRMED' || $status_filter === 'UPCOMING') {
+    // Upcoming = CONFIRMED and is today or future
+    $sql .= " AND B.booking_status = 'CONFIRMED' AND S.depart_date >= CURDATE()";
+}
+else if ($status_filter === 'COMPLETED') {
+    // Completed = CONFIRMED and is past
+    $sql .= " AND B.booking_status = 'CONFIRMED' AND S.depart_date < CURDATE()";
+}
+else if ($status_filter === 'CANCELLED') {
     $sql .= " AND B.booking_status = ?";
-    $params[] = $status_filter;
+    $params[] = 'CANCELLED';
     $types .= "s";
 }
 
@@ -55,7 +60,6 @@ if ($stmt === false) {
     sendResponse(false, 'Database preparation failed: ' . $conn->error, 500);
 }
 
-// 5. Dynamic binding of parameters
 $stmt->bind_param($types, ...$params);
 
 if (!$stmt->execute()) {
@@ -73,6 +77,5 @@ while ($row = $result->fetch_assoc()) {
 $stmt->close();
 $conn->close();
 
-// 6. Final Success Response
 sendResponse(true, 'Bookings fetched successfully.', 200, $bookings);
 ?>

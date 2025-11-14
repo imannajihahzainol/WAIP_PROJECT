@@ -18,45 +18,45 @@ $is_logged_in = true; // Confirmed logged in
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BTB | Booking History</title>
 
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&family=Open+Sans:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&family=Open+Sans:wght@400;500&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
 
-  <header>
-    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
-        <div class="container d-flex justify-content-between align-items-center">
-            <a class="navbar-logo" href="main.php"> <img src="assets/img/btb_logo.png" alt="BTB Logo" class="banner-logo" style="height: 40px;">
-            </a>
-
-            <div class="collapse navbar-collapse justify-content-center" id="navbarNav">
-                <ul class="navbar-nav">
-                    <li class="nav-item"><a class="nav-link" href="main.php">Home</a></li> <li class="nav-item"><a class="nav-link" href="routes.php">Routes</a></li> <li class="nav-item"><a class="nav-link" href="booking.php">Book Ticket</a></li> </ul>
-            </div>
-
-            <div class="dropdown" id="accountDropdown">
-                <a href="#" class="d-flex align-items-center text-dark text-decoration-none dropdown-toggle" id="accountMenu" data-bs-toggle="dropdown" aria-expanded="false">
-                    <i class="bi bi-person-circle fs-4 me-1"></i> 
-                    My Account
+    <header>
+        <nav class="navbar navbar-expand-lg navbar-light bg-custom shadow-sm">
+            <div class="container d-flex justify-content-between align-items-center">
+                <a class="navbar-logo" href="main.php"> <img src="assets/img/btb_logo.png" alt="BTB Logo" class="banner-logo" style="height: 40px;">
                 </a>
-                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="accountMenu">
-                    <li><a class="dropdown-item active" href="booking_history.php">Booking History</a></li>
-                    <li><hr class="dropdown-divider"></li>
-                    <li><a class="dropdown-item" href="api/user_logout.php">Log Out</a></li> 
-                </ul>
+
+                <div class="collapse navbar-collapse justify-content-center" id="navbarNav">
+                    <ul class="navbar-nav">
+                        <li class="nav-item"><a class="nav-link" href="main.php">Home</a></li> <li class="nav-item"><a class="nav-link" href="routes.php">Routes</a></li> <li class="nav-item"><a class="nav-link" href="booking.php">Book Ticket</a></li> </ul>
+                </div>
+
+                <div class="dropdown" id="accountDropdown">
+                    <a href="#" class="d-flex align-items-center text-dark text-decoration-none dropdown-toggle" id="accountMenu" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-person-circle fs-4 me-1"></i> 
+                        My Account
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="accountMenu">
+                        <li><a class="dropdown-item active" href="booking_history.php">Booking History</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="api/user_logout.php">Log Out</a></li> 
+                    </ul>
+                </div>
+                
+                <button class="navbar-toggler ms-2" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
             </div>
-            
-            <button class="navbar-toggler ms-2" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-        </div>
-    </nav>
-  </header>
+        </nav>
+    </header>
 
     <main class="container my-5">
         
@@ -123,7 +123,6 @@ $is_logged_in = true; // Confirmed logged in
                     <ul class="list-unstyled">
                         <li><a href="#">Terms & Conditions</a></li>
                         <li><a href="#">Privacy Policy</a></li>
-                        <li><a href="#">Cookie Policy</a></li>
                     </ul>
                 </div>
 
@@ -159,28 +158,69 @@ $is_logged_in = true; // Confirmed logged in
         document.addEventListener('DOMContentLoaded', function() {
             fetchBookings(currentFilter); 
 
+            // Filter button logic
             filterButtons.forEach(button => {
                 button.addEventListener('click', function() {
                     let newFilter = this.getAttribute('data-status');
 
+                    // Update active button styling
                     filterButtons.forEach(btn => btn.classList.replace('btn-warning', 'btn-outline-secondary'));
+                    filterButtons.forEach(btn => btn.classList.remove('text-white'));
+                    
                     this.classList.replace('btn-outline-secondary', 'btn-warning');
+                    if (this.classList.contains('btn-warning')) {
+                        this.classList.add('text-white');
+                    } else if (newFilter === 'CANCELLED') {
+                        // Ensure Cancelled filter button uses danger style when not active
+                        this.classList.replace('btn-warning', 'btn-outline-danger');
+                    }
                     
                     currentFilter = newFilter;
                     fetchBookings(currentFilter);
                 });
             });
 
+            // --- CANCELLATION EVENT LISTENER ---
             bookingTableBody.addEventListener('click', function(e) {
                 const cancelBtn = e.target.closest('.cancel-btn');
                 if (cancelBtn) {
-                    if (confirm("Are you sure you want to cancel this booking? This action cannot be undone.")) {
-                        // Placeholder for cancellation logic
-                        alert(`Cancellation requested for Booking ID ${cancelBtn.dataset.id}. API not implemented.`);
+                    const bookingId = cancelBtn.dataset.id;
+                    const bookingCode = `BK${bookingId}`;
+                    
+                    if (confirm(`Are you sure you want to cancel booking ${bookingCode}? This action cannot be undone and may incur cancellation fees.`)) {
+                        cancelBooking(bookingId);
                     }
                 }
             });
         });
+
+        // --- Function to send cancellation request ---
+        async function cancelBooking(bookingId) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/cancel_booking.php`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ booking_id: bookingId }) 
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    alert(`Success: Booking BK${bookingId} has been successfully cancelled.`);
+                    // Refresh the current list to show the updated status
+                    fetchBookings(currentFilter); 
+                } else {
+                    alert(`Error cancelling booking: ${data.message}`);
+                }
+
+            } catch (error) {
+                console.error('Cancellation error:', error);
+                alert('A network error occurred while trying to cancel the booking.');
+            }
+        }
+
 
         // Helper to get status badge styling
         function getStatusBadge(status) {
@@ -196,6 +236,7 @@ $is_logged_in = true; // Confirmed logged in
         function renderBookings(bookings) {
             bookingTableBody.innerHTML = '';
 
+            // Updated colspan count to 7 (since 'Action' column remains)
             if (bookings.length === 0) {
                 bookingTableBody.innerHTML = `<tr><td colspan="8" class="text-center text-muted">No ${currentFilter ? currentFilter.toLowerCase() : 'active'} bookings found.</td></tr>`;
                 return;
@@ -203,7 +244,7 @@ $is_logged_in = true; // Confirmed logged in
 
             bookings.forEach(booking => {
                 const statusBadge = getStatusBadge(booking.booking_status);
-                const routeParts = booking.route_name.split(' to ');
+                const routeParts = booking.route_name ? booking.route_name.split(' to ') : [booking.route_name];
                 const routeDisplay = routeParts.join(' <i class="bi bi-arrow-right"></i> ');
                 
                 let actionButtons = '';
@@ -211,18 +252,19 @@ $is_logged_in = true; // Confirmed logged in
                 const today = new Date();
                 today.setHours(0,0,0,0); 
 
+                // Logic to show/hide the Cancel button
                 if (booking.booking_status === 'CONFIRMED' && departDate >= today) {
+                    // REVISION: Removed "View Ticket" button
                     actionButtons = `
-                        <button class="btn btn-sm btn-info text-white me-2">View Ticket</button>
                         <button class="btn btn-sm btn-outline-danger cancel-btn" data-id="${booking.booking_id}">Cancel</button>
                     `;
                 } else if (booking.booking_status === 'COMPLETED' || (booking.booking_status === 'CONFIRMED' && departDate < today)) {
-                     actionButtons = `
-                        <button class="btn btn-sm btn-info text-white me-2">View Ticket</button>
+                    // REVISION: Removed "View Ticket" button and kept only disabled Review button
+                    actionButtons = `
                         <button class="btn btn-sm btn-outline-secondary" disabled>Review</button>
                     `;
                 } else {
-                     actionButtons = `<button class="btn btn-sm btn-outline-dark" disabled>N/A</button>`;
+                    actionButtons = `<button class="btn btn-sm btn-outline-dark" disabled>N/A</button>`;
                 }
 
                 const row = document.createElement('tr');
@@ -240,7 +282,7 @@ $is_logged_in = true; // Confirmed logged in
             });
         }
 
-        // Fetch API call
+        // Fetch API call (now includes logic to handle session expiry implicitly)
         async function fetchBookings(filter) {
             bookingTableBody.innerHTML = `<tr><td colspan="8" class="text-center text-info py-3"><span class="spinner-border spinner-border-sm me-2"></span> Loading ${filter ? filter.toLowerCase() : 'all'} bookings...</td></tr>`;
 
@@ -252,8 +294,8 @@ $is_logged_in = true; // Confirmed logged in
                 if (data.success) {
                     renderBookings(data.bookings);
                 } else if (response.status === 401) {
-                    // Redirect if unauthorized (session expired)
-                     window.location.href = 'user_login.php';
+                    // Redirect if unauthorized (session expired - handled by get_bookings.php)
+                    window.location.href = 'user_login.php';
                 } else {
                     throw new Error(data.message || 'Failed to load booking history.');
                 }

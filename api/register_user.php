@@ -24,9 +24,11 @@ if (empty($username) || empty($email) || empty($password)) {
     sendResponse(false, 'All fields are required.', 400);
 }
 
+// 1. Hash the password for security
 $hashed_password = password_hash($password, PASSWORD_DEFAULT); 
 
-$stmt = $conn->prepare("INSERT INTO CUSTOMER (customer_username, customer_email, customer_password) VALUES (?, ?, ?)");
+// REVISION: Corrected table name to 'customer' (singular)
+$stmt = $conn->prepare("INSERT INTO customer (customer_username, customer_email, customer_password) VALUES (?, ?, ?)");
 
 if ($stmt === false) {
     sendResponse(false, 'Database preparation failed: ' . $conn->error, 500);
@@ -38,6 +40,7 @@ if ($stmt->execute()) {
     sendResponse(true, 'Registration successful!', 201); 
 } else {
     if ($conn->errno == 1062) { 
+        // Error 1062 is for duplicate entry (unique constraint violation)
         sendResponse(false, 'Username or Email already exists.', 409); 
     } else {
         sendResponse(false, 'Registration failed: ' . $stmt->error, 500);

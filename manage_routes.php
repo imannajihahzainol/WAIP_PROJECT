@@ -4,7 +4,7 @@ session_start();
 
 // Check if the admin is logged in (using the session variable set during login)
 if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
-    header('Location: admin_login.html'); // Redirect to your login page
+    header('Location: admin_login.php'); // Corrected redirect
     exit; 
 }
 // Admin is logged in, continue execution.
@@ -172,10 +172,11 @@ if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== tru
             window.location.href = 'api/admin_logout.php'; 
         });
 
+        // --- Utility Functions (Keep the original showLoading, showFeedback, etc.) ---
         function showLoading(isLoading) {
             const saveRouteBtn = document.getElementById('saveRouteBtn');
-            const buttonText = document.getElementById('buttonText');
-            const loadingSpinner = document.getElementById('loadingSpinner');
+            const buttonText = saveRouteBtn.querySelector('#buttonText');
+            const loadingSpinner = saveRouteBtn.querySelector('#loadingSpinner');
             saveRouteBtn.disabled = isLoading;
             buttonText.classList.toggle('d-none', isLoading);
             loadingSpinner.classList.toggle('d-none', !isLoading);
@@ -185,6 +186,8 @@ if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== tru
             routeMessage.textContent = message;
             routeMessage.classList.remove('d-none', 'alert-success', 'alert-danger');
             routeMessage.classList.add(isError ? 'alert-danger' : 'alert-success');
+            // Hide message after 5 seconds
+            setTimeout(() => routeMessage.classList.add('d-none'), 5000); 
         }
 
         function addSlot() {
@@ -261,17 +264,20 @@ if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== tru
                     body: JSON.stringify(payload)
                 });
                 
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({ message: `HTTP error! Status: ${response.status}` }));
+                    throw new Error(errorData.message || 'Route creation failed on the server.');
+                }
+                
                 const data = await response.json();
 
-                if (response.ok && data.success) {
+                if (data.success) {
                     showFeedback(`Route created successfully! ID: R-${data.route_id}`, false);
                     routeForm.reset();
-                    // Reset slots to the initial single slot
                     scheduleSlotsContainer.innerHTML = initialSlotHTML; 
                     currentSlotId = 1; 
                     fetchExistingRoutes(); // Refresh the list
                 } else {
-                    // Handle server-side errors
                     throw new Error(data.message || 'Route creation failed on the server.');
                 }
             } catch (error) {
@@ -281,18 +287,24 @@ if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== tru
             }
         });
 
-        // --- AJAX Route Listing (GET) ---
+        // --- AJAX Route Listing (GET ALL) ---
 
         async function fetchExistingRoutes() {
             routesTableBody.innerHTML = `<tr><td colspan="5" class="text-center text-info py-3"><span class="spinner-border spinner-border-sm me-2"></span> Loading routes...</td></tr>`;
 
             try {
-                // Call the API endpoint for fetching routes
-                const response = await fetch(`${API_BASE_URL}/api/get_routes.php`); 
+                // Call the dedicated non-paginated API
+                const response = await fetch(`${API_BASE_URL}/api/get_all_admin_routes.php`); 
                 
+                // If unauthorized (401), redirect to login
+                if (response.status === 401) {
+                    window.location.href = 'admin_login.php';
+                    return;
+                }
+
                 const data = await response.json();
                 
-                if (!response.ok || !data.success) {
+                if (!data.success) {
                     throw new Error(data.message || 'Failed to load routes from the server.');
                 }
                 
@@ -307,13 +319,15 @@ if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== tru
 
                 routes.forEach(route => {
                     const row = document.createElement('tr');
+                    // Ensure schedule_count is handled safely
+                    const scheduleCount = parseInt(route.schedule_count) > 0 ? `${route.schedule_count} Slots` : '0 Slots';
+                    
                     row.innerHTML = `
                         <td>${route.route_id}</td>
                         <td>${route.route_name}</td>
                         <td>${route.route_desc}</td>
-                        <td>${route.schedule_count} Slots</td>
+                        <td>${scheduleCount}</td>
                         <td>
-                            <button class="btn btn-sm btn-outline-primary me-2 edit-btn" data-id="${route.route_id}" disabled>Edit</button>
                             <button class="btn btn-sm btn-outline-danger delete-btn" data-id="${route.route_id}">Delete</button>
                         </td>
                     `;
@@ -345,9 +359,14 @@ if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== tru
                         headers: { 'X-Requested-With': 'XMLHttpRequest' }
                     });
                     
+                    if (!response.ok) {
+                        const errorData = await response.json().catch(() => ({ message: `HTTP error! Status: ${response.status}` }));
+                        throw new Error(errorData.message || 'Deletion failed.');
+                    }
+                    
                     const data = await response.json();
 
-                    if (response.ok && data.success) {
+                    if (data.success) {
                         showFeedback(`Route ${routeId} deleted successfully.`, false);
                         fetchExistingRoutes(); // Refresh the list
                     } else {
@@ -364,12 +383,12 @@ if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== tru
         // Initial Load Setup
         document.addEventListener('DOMContentLoaded', function() {
             addSlotBtn.addEventListener('click', addSlot);
-            // Ensure initial slot removal button is managed
-            const initialRemoveBtn = scheduleSlotsContainer.querySelector('.remove-slot-btn');
-            if (initialRemoveBtn) {
-                initialRemoveBtn.disabled = scheduleSlotsContainer.children.length <= 1;
-            }
             
+            // Set minimum date for routeDate to today
+            const routeDateInput = document.getElementById('routeDate');
+            const today = new Date().toISOString().split('T')[0];
+            routeDateInput.setAttribute('min', today);
+
             fetchExistingRoutes(); // Call the function on page load
         });
     </script>

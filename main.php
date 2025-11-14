@@ -24,7 +24,7 @@ $customer_id = $_SESSION['customer_id'] ?? null;
 <body>
 
   <header>
-    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+    <nav class="navbar navbar-expand-lg navbar-light bg-custom shadow-sm">
       <div class="container d-flex justify-content-between align-items-center">
         <a class="navbar-logo" href="main.php">
           <img src="assets/img/btb_logo.png" alt="BTB Logo" class="banner-logo">
@@ -48,6 +48,8 @@ $customer_id = $_SESSION['customer_id'] ?? null;
                     <li><a class="dropdown-item" href="booking_history.php">Booking History</a></li>
                     <li><hr class="dropdown-divider"></li>
                     <li><a class="dropdown-item" href="api/user_logout.php">Log Out</a></li> 
+                <?php else: ?>
+                    <li><a class="dropdown-item" href="user_login.php">Log In / Sign Up</a></li> 
                 <?php endif; ?>
             </ul>
         </div>
@@ -83,11 +85,19 @@ $customer_id = $_SESSION['customer_id'] ?? null;
                     <option value="Kuantan"></option>
                     <option value="Sg Petani"></option>
                     <option value="Pasir Mas"></option>
+                    <option value="Seri Iskandar"></option>
+                    <option value="Putrajaya"></option>
+                    <option value="Pendang"></option>
+                    <option value="Bentong"></option>
+                    <option value="Port Dickson"></option>
+                    <option value="Kangar"></option>
+                    <option value="Alor Setar"></option>
+                    <option value="Setiu"></option>
                   </datalist>
                 </div>
                 
                 <div class="col-md-3">
-                  <input type="text" class="form-control" name="to" placeholder="To (e.g., Johor Bahru)" list="to-locations">
+                  <input type="text" class="form-control" name="to" id="toInput" placeholder="To (e.g., Johor Bahru)" list="to-locations">
                   <datalist id="to-locations">
                     <option value="Kuala Lumpur"></option>
                     <option value="Johor Bahru"></option>
@@ -100,6 +110,14 @@ $customer_id = $_SESSION['customer_id'] ?? null;
                     <option value="Kuantan"></option>
                     <option value="Sg Petani"></option>
                     <option value="Pasir Mas"></option>
+                    <option value="Seri Iskandar"></option>
+                    <option value="Putrajaya"></option>
+                    <option value="Pendang"></option>
+                    <option value="Bentong"></option>
+                    <option value="Port Dickson"></option>
+                    <option value="Kangar"></option>
+                    <option value="Alor Setar"></option>
+                    <option value="Setiu"></option>
                   </datalist>
                 </div>
                 
@@ -174,6 +192,7 @@ $customer_id = $_SESSION['customer_id'] ?? null;
     document.addEventListener('DOMContentLoaded', function() {
         const searchForm = document.getElementById('searchForm');
         const departDateInput = document.getElementById('departDate');
+        const toInput = document.getElementById('toInput'); // Use ID for reliable access
         
         // --- Date Validation ---
         const today = new Date().toISOString().split('T')[0];
@@ -185,10 +204,18 @@ $customer_id = $_SESSION['customer_id'] ?? null;
         searchForm.addEventListener('submit', function(e) {
             e.preventDefault();
             
+            // 1. Validation: Ensure the 'To' field is filled
+            if (toInput.value.trim() === '') {
+                alert('Please enter a destination (To) to search for buses.');
+                toInput.focus();
+                return; // Stop the function if validation fails
+            }
+
             const formData = new FormData(searchForm);
             
             const params = new URLSearchParams();
             for (const [key, value] of formData.entries()) {
+                // Only include non-empty fields in the URL (excluding return date)
                 if (value.trim() !== '' && key !== 'return_date') {
                     params.append(key, value.trim());
                 }

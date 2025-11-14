@@ -1,18 +1,71 @@
 <?php
-// We do NOT require session_start() here as this is a public API used by routes.html/php
-// and a private API used by manage_routes.php (which already has session control).
+// api/get_routes.php
+// Public endpoint for routes. No session check required.
 require_once '../db_config.php'; 
 
 header('Content-Type: application/json');
 
-// Function to safely output JSON response and set HTTP status code
-function sendResponse($success, $message, $http_code, $routes = []) {
+function sendResponse($success, $message, $http_code, $routes = [], $total_pages = 0, $current_page = 0) {
     http_response_code($http_code);
-    echo json_encode(['success' => $success, 'message' => $message, 'routes' => $routes]);
+    echo json_encode([
+        'success' => $success, 
+        'message' => $message, 
+        'routes' => $routes,
+        'total_pages' => $total_pages, // CRITICAL for pagination JS
+        'current_page' => $current_page // CRITICAL for pagination JS
+    ]);
     exit;
 }
 
-// SQL Query: Joins ROUTES (R) with SCHEDULES (S) to find the minimum price and schedule count per route.
+// --- PAGINATION & FILTER SETUP ---
+$limit = 4; // Display 4 routes per page (matches front-end look)
+$page = isset($_GET['page']) ? intval($_GET['page']) : 1;
+if ($page < 1) $page = 1;
+$offset = ($page - 1) * $limit;
+
+$fromCity = isset($_GET['from']) ? trim($_GET['from']) : '';
+$toCity = isset($_GET['to']) ? trim($_GET['to']) : '';
+
+// --- DYNAMIC WHERE CLAUSE ---
+$where_clauses = []; 
+
+if (!empty($fromCity) && $fromCity !== 'Select City') {
+    $safe_from = $conn->real_escape_string($fromCity);
+    $where_clauses[] = "R.route_name LIKE '{$safe_from} to %'";
+}
+
+if (!empty($toCity) && $toCity !== 'Select City') {
+    $safe_to = $conn->real_escape_string($toCity);
+    $where_clauses[] = "R.route_name LIKE '% to {$safe_to}%'";
+}
+
+$where_sql = count($where_clauses) > 0 ? " WHERE " . implode(" AND ", $where_clauses) : "";
+
+
+// --- 1. COUNT QUERY (Total results with filters) ---
+$count_sql = "SELECT 
+                COUNT(DISTINCT R.route_id) AS total_routes
+              FROM ROUTES R
+              LEFT JOIN SCHEDULES S ON R.route_id = S.route_id AND S.depart_date >= CURDATE()"
+              . $where_sql;
+
+$count_result = $conn->query($count_sql);
+
+$total_routes = 0;
+if ($count_result && $count_row = $count_result->fetch_assoc()) {
+    $total_routes = (int)$count_row['total_routes'];
+}
+
+$total_pages = ceil($total_routes / $limit);
+// Re-adjust page if out of bounds (important when filters change)
+if ($page > $total_pages && $total_pages > 0) {
+    $page = $total_pages;
+    $offset = ($page - 1) * $limit;
+} else if ($total_routes === 0) {
+    $page = 1;
+}
+
+// --- 2. MAIN QUERY (Paginated data with filters) ---
 $sql = "SELECT 
             R.route_id, 
             R.route_name, 
@@ -20,13 +73,13 @@ $sql = "SELECT
             MIN(S.price) AS min_price,
             COUNT(S.schedule_id) AS schedule_count
         FROM ROUTES R
-        -- Use LEFT JOIN to include routes even if they don't have a schedule yet
-        LEFT JOIN SCHEDULES S ON R.route_id = S.route_id AND S.depart_date >= CURDATE()
+        LEFT JOIN SCHEDULES S ON R.route_id = S.route_id AND S.depart_date >= CURDATE()"
+        . $where_sql . " 
         GROUP BY R.route_id, R.route_name, R.route_desc
-        ORDER BY R.route_id DESC";
+        ORDER BY R.route_id DESC
+        LIMIT $limit OFFSET $offset";
 
 $result = $conn->query($sql);
-
 $routes = [];
 
 if ($result === false) {
@@ -39,18 +92,15 @@ if ($result->num_rows > 0) {
             'route_id' => $row['route_id'],
             'route_name' => $row['route_name'],
             'route_desc' => $row['route_desc'],
-            // Format price to two decimal places, or set to 0.00 if min_price is NULL (no schedules)
+            // FIX: Ensure min_price is a string '0.00' if NULL (was causing 'RM undefined')
             'min_price' => $row['min_price'] ? number_format((float)$row['min_price'], 2, '.', '') : '0.00',
             'schedule_count' => (int)$row['schedule_count']
         ];
     }
     
-    // Success response with data
-    sendResponse(true, 'Routes fetched successfully.', 200, $routes);
+    sendResponse(true, 'Routes fetched successfully.', 200, $routes, $total_pages, $page);
 } else {
-    // Success response but no routes found
-    sendResponse(true, 'No routes found.', 200, []);
+    sendResponse(true, 'No routes found.', 200, [], $total_pages, $page);
 }
 
 $conn->close();
-?>
