@@ -1,12 +1,5 @@
 <?php
-// PHP Session Start - Used to check if a user is already logged in (optional but good practice)
 session_start();
-/*
-if (isset($_SESSION['customer_logged_in']) && $_SESSION['customer_logged_in'] === true) {
-    header('Location: main.php'); // Redirect to homepage if already logged in
-    exit;
-}
-*/
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -95,12 +88,10 @@ if (isset($_SESSION['customer_logged_in']) && $_SESSION['customer_logged_in'] ==
 
         async function handleLogin(event) {
             event.preventDefault();
-            messageContainer.classList.add('d-none'); // Hide previous message
+            messageContainer.classList.add('d-none'); 
             showLoading(true);
-            
             const username = form.username.value;
             const password = form.password.value;
-            
             const payload = { username, password };
 
             try {
@@ -114,7 +105,6 @@ if (isset($_SESSION['customer_logged_in']) && $_SESSION['customer_logged_in'] ==
 
                 if (response.ok && data.success) {
                     showMessage("Login successful! Redirecting to homepage...", false);
-                    // --- FINAL CORRECT REDIRECT: user_login -> main.php ---
                     setTimeout(() => {
                         window.location.href = 'main.php'; 
                     }, 1000);

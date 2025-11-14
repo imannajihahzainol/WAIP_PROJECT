@@ -1,13 +1,12 @@
 <?php
-// PHP Security Check - MUST be at the top of the file
 session_start();
 
-// Check if the admin is logged in (using the session variable set during login)
+//check if the admin is logged in 
 if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
-    header('Location: admin_login.php'); // Corrected redirect
+    header('Location: admin_login.php');
     exit; 
 }
-// Admin is logged in, continue execution.
+//admin is logged in
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -160,19 +159,14 @@ if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== tru
         const addSlotBtn = document.getElementById('addSlotBtn');
         const routesTableBody = document.getElementById('existingRoutesTable');
         const routeMessage = document.getElementById('routeMessage');
-        
-        // Store the initial slot HTML for resetting the form cleanly
         const initialSlotHTML = scheduleSlotsContainer.innerHTML;
 
         let currentSlotId = 1;
 
         document.getElementById('adminLogoutBtn').addEventListener('click', function(e) {
             e.preventDefault();
-            // Redirect to the PHP logout script
             window.location.href = 'api/admin_logout.php'; 
         });
-
-        // --- Utility Functions (Keep the original showLoading, showFeedback, etc.) ---
         function showLoading(isLoading) {
             const saveRouteBtn = document.getElementById('saveRouteBtn');
             const buttonText = saveRouteBtn.querySelector('#buttonText');
@@ -186,7 +180,6 @@ if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== tru
             routeMessage.textContent = message;
             routeMessage.classList.remove('d-none', 'alert-success', 'alert-danger');
             routeMessage.classList.add(isError ? 'alert-danger' : 'alert-success');
-            // Hide message after 5 seconds
             setTimeout(() => routeMessage.classList.add('d-none'), 5000); 
         }
 
@@ -214,8 +207,6 @@ if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== tru
             `;
             scheduleSlotsContainer.appendChild(newSlot);
         }
-
-        // Attach event listener delegation for removing slots
         scheduleSlotsContainer.addEventListener('click', function(event) {
             const button = event.target.closest('.remove-slot-btn');
             if (button) {
@@ -227,18 +218,14 @@ if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== tru
             }
         });
 
-        // --- AJAX Form Submission (Create Route & Schedules) ---
+        //create Route & Schedules
         routeForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             routeMessage.classList.add('d-none');
             showLoading(true);
-
-            // 1. Collect Route Details
             const routeName = document.getElementById('routeName').value;
             const routeDesc = document.getElementById('routeDesc').value;
             const departDate = document.getElementById('routeDate').value; 
-            
-            // 2. Collect all Schedule Slots
             const schedules = [];
             const slotElements = scheduleSlotsContainer.querySelectorAll('.schedule-slot');
 
@@ -250,11 +237,8 @@ if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== tru
                     max_seats: parseInt(slot.querySelector('[data-field="maxSeats"]').value),
                 });
             });
-
-            // 3. Construct Payload
             const payload = { routeName, routeDesc, schedules };
 
-            // 4. Send to PHP API for creation
             try {
                 const response = await fetch(`${API_BASE_URL}/api/create_route_schedules.php`, {
                     method: 'POST',
@@ -276,7 +260,7 @@ if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== tru
                     routeForm.reset();
                     scheduleSlotsContainer.innerHTML = initialSlotHTML; 
                     currentSlotId = 1; 
-                    fetchExistingRoutes(); // Refresh the list
+                    fetchExistingRoutes(); 
                 } else {
                     throw new Error(data.message || 'Route creation failed on the server.');
                 }
@@ -287,16 +271,11 @@ if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== tru
             }
         });
 
-        // --- AJAX Route Listing (GET ALL) ---
-
         async function fetchExistingRoutes() {
             routesTableBody.innerHTML = `<tr><td colspan="5" class="text-center text-info py-3"><span class="spinner-border spinner-border-sm me-2"></span> Loading routes...</td></tr>`;
 
             try {
-                // Call the dedicated non-paginated API
                 const response = await fetch(`${API_BASE_URL}/api/get_all_admin_routes.php`); 
-                
-                // If unauthorized (401), redirect to login
                 if (response.status === 401) {
                     window.location.href = 'admin_login.php';
                     return;
@@ -319,7 +298,6 @@ if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== tru
 
                 routes.forEach(route => {
                     const row = document.createElement('tr');
-                    // Ensure schedule_count is handled safely
                     const scheduleCount = parseInt(route.schedule_count) > 0 ? `${route.schedule_count} Slots` : '0 Slots';
                     
                     row.innerHTML = `
@@ -340,7 +318,7 @@ if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== tru
             }
         }
         
-        // --- AJAX Route Deletion (DELETE) ---
+        //route deletion
         routesTableBody.addEventListener('click', async function(e) {
             const deleteBtn = e.target.closest('.delete-btn');
             if (deleteBtn) {
@@ -353,7 +331,6 @@ if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== tru
                 deleteBtn.disabled = true;
                 
                 try {
-                    // Call the DELETE API endpoint
                     const response = await fetch(`${API_BASE_URL}/api/delete_route.php?id=${routeId}`, {
                         method: 'DELETE',
                         headers: { 'X-Requested-With': 'XMLHttpRequest' }
@@ -378,18 +355,12 @@ if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== tru
                 }
             }
         });
-
-
-        // Initial Load Setup
         document.addEventListener('DOMContentLoaded', function() {
             addSlotBtn.addEventListener('click', addSlot);
-            
-            // Set minimum date for routeDate to today
             const routeDateInput = document.getElementById('routeDate');
             const today = new Date().toISOString().split('T')[0];
             routeDateInput.setAttribute('min', today);
-
-            fetchExistingRoutes(); // Call the function on page load
+            fetchExistingRoutes(); 
         });
     </script>
 </body>

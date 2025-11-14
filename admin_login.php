@@ -31,15 +31,12 @@
             
             <!-- Error Message Placeholder -->
             <div id="loginErrorMessage" class="alert alert-danger d-none" role="alert"></div>
-
-            <!-- Form updated to link to API endpoint and use ID for AJAX -->
             <form action="/api/auth/login" method="POST" id="adminLoginForm">
                 
                 <div class="mb-3">
                     <label for="adminUsername" class="form-label visually-hidden">Admin Username</label>
                     <div class="input-group">
                         <span class="input-group-text bg-white border-end-0"><i class="bi bi-person-gear custom-icon"></i></span>
-                        <!-- Changed name to 'username' to match API expectation -->
                         <input type="text" class="form-control border-start-0" id="adminUsername" name="username" placeholder="Admin Username" required>
                     </div>
                 </div>
@@ -48,7 +45,6 @@
                     <label for="adminPassword" class="form-label visually-hidden">Password</label>
                     <div class="input-group">
                         <span class="input-group-text bg-white border-end-0"><i class="bi bi-lock custom-icon"></i></span>
-                        <!-- Changed name to 'password' to match API expectation -->
                         <input type="password" class="form-control border-start-0" id="adminPassword" name="password" placeholder="Password" required>
                     </div>
                 </div>
@@ -70,7 +66,6 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-    // 1. CHANGE: Set the base URL to your project root on XAMPP
     const API_BASE_URL = 'http://localhost/WAIP_PROJECT'; 
     
     document.addEventListener('DOMContentLoaded', function() {
@@ -97,30 +92,19 @@
             const payload = { username, password };
 
             try {
-                // 2. CHANGE: Use the PHP API endpoint
                 const response = await fetch(`${API_BASE_URL}/api/admin_login.php`, {
                     method: 'POST',
-                    // Keep headers and JSON.stringify as your JS expects JSON
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload) 
                 });
 
                 const data = await response.json();
-
-                // 3. CHANGE: Check the 'success' flag from the PHP response
                 if (data.success) {
-                    // Successful login
-                    // Note: PHP uses sessions, so storing a token is optional here,
-                    // but the backend needs to enforce session-based authorization.
-                    
-                    // Redirect to the admin dashboard
                     window.location.href = 'admin.php';
                 } else {
-                    // Display error message from the backend (data.message)
                     throw new Error(data.message || 'Login failed. Please check credentials.');
                 }
             } catch (error) {
-                // Handle network or script error
                 errorDiv.textContent = error.message.includes('fetch') ? 'Could not connect to server or API path is wrong.' : error.message;
                 errorDiv.classList.remove('d-none');
             } finally {

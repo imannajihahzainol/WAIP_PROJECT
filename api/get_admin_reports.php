@@ -1,7 +1,6 @@
 <?php
 session_start();
 require_once '../db_config.php'; 
-
 header('Content-Type: application/json');
 
 function sendResponse($success, $message, $http_code, $data = null) {
@@ -10,7 +9,7 @@ function sendResponse($success, $message, $http_code, $data = null) {
     exit;
 }
 
-// 1. Security Check
+//security check
 if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
     sendResponse(false, 'Authorization required.', 401);
 }
@@ -18,14 +17,11 @@ if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== tru
 $today = date('Y-m-d');
 $last_month_start = date('Y-m-d', strtotime('first day of last month'));
 $last_week_start = date('Y-m-d', strtotime('-7 days'));
-
 $report_data = [];
-
-// Initialize unique statement variables (CRUCIAL FIX for the 'already closed' error)
 $stmt1 = $stmt2 = $stmt3 = $stmt4 = null; 
 
 try {
-    // --- Query 1: Total Bookings (Since last month) ---
+    // query for total bookings
     $query_total_bookings = "SELECT COUNT(booking_id) AS total FROM BOOKINGS WHERE booking_status = 'CONFIRMED' AND booking_time >= ?";
     $stmt1 = $conn->prepare($query_total_bookings);
     $stmt1->bind_param("s", $last_month_start);
@@ -34,7 +30,7 @@ try {
     $report_data['totalBookingsCount'] = (int)$result['total'];
     $stmt1->close(); 
 
-    // --- Query 2: Active Routes (With schedules today or later) ---
+    //query active routes 
     $query_active_routes = "SELECT COUNT(DISTINCT R.route_id) AS active FROM ROUTES R JOIN SCHEDULES S ON R.route_id = S.route_id WHERE S.depart_date >= ?";
     $stmt2 = $conn->prepare($query_active_routes);
     $stmt2->bind_param("s", $today);
@@ -43,8 +39,7 @@ try {
     $report_data['activeRoutesCount'] = (int)$result['active'];
     $stmt2->close(); 
 
-    // --- Query 3: New Users (Registered this week) ---
-    // REVISION: Corrected table name to 'customer' (singular)
+    //query new users 
     $query_new_users = "SELECT COUNT(customer_id) AS new_users FROM customer WHERE created_at >= ?";
     $stmt3 = $conn->prepare($query_new_users);
     $stmt3->bind_param("s", $last_week_start);
@@ -53,8 +48,7 @@ try {
     $report_data['newUsersCount'] = (int)$result['new_users'];
     $stmt3->close(); 
     
-    // --- Query 4: Future Tickets (Confirmed bookings with a future departure date) ---
-    // REVISION: Parsing seat count from 'X seat(s)' string
+    //query future tickets 
     $query_pending = "
         SELECT SUM(SUBSTRING_INDEX(B.seat_num, ' ', 1)) AS pending_seats 
         FROM BOOKINGS B 
@@ -68,8 +62,7 @@ try {
     $stmt4->close();
 
 
-    // --- Query 5: Route Booking Summary (for chart data visualization) ---
-    // REVISION: Parsing seat count from 'X seat(s)' string
+    //query route booking summary
     $query_route_summary = "
         SELECT 
             R.route_name, 
@@ -97,7 +90,6 @@ try {
     sendResponse(true, 'Report data fetched successfully.', 200, $report_data);
 
 } catch (Exception $e) {
-    // Attempt to close statements safely in case of error
     if (isset($stmt1) && $stmt1 instanceof mysqli_stmt) { $stmt1->close(); }
     if (isset($stmt2) && $stmt2 instanceof mysqli_stmt) { $stmt2->close(); }
     if (isset($stmt3) && $stmt3 instanceof mysqli_stmt) { $stmt3->close(); }

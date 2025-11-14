@@ -1,5 +1,4 @@
 <?php
-// PHP Session Start and Status Check (if needed, though this file focuses on routes)
 session_start();
 $is_logged_in = isset($_SESSION['customer_logged_in']) && $_SESSION['customer_logged_in'] === true;
 ?>
@@ -183,42 +182,29 @@ $is_logged_in = isset($_SESSION['customer_logged_in']) && $_SESSION['customer_lo
     const API_BASE_URL = 'http://localhost/WAIP_PROJECT'; 
     const routeListContainer = document.getElementById('routeListContainer');
     const paginationContainer = document.querySelector('.pagination'); 
-    
-    // Select filter elements
     const filterForm = document.getElementById('filterForm');
     const fromFilter = document.getElementById('fromFilter');
     const toFilter = document.getElementById('toFilter');
-    
-    // Get URL parameters sent from main.php
     const urlParams = new URLSearchParams(window.location.search);
     const initialFrom = urlParams.get('from') || '';
     const initialTo = urlParams.get('to') || '';
 
-    // --- INITIAL LOAD & FORM SUBMISSION ---
-
     document.addEventListener('DOMContentLoaded', function() {
         
-        // 1. Pre-fill filters from URL parameters
-        // This checks if the URL parameter matches an available option before setting
         if (initialFrom && Array.from(fromFilter.options).some(opt => opt.value === initialFrom)) {
             fromFilter.value = initialFrom;
         }
         if (initialTo && Array.from(toFilter.options).some(opt => opt.value === initialTo)) {
             toFilter.value = initialTo;
         }
-
-        // 2. Initial load of routes (Will automatically use the pre-filled values)
         fetchRoutes(1); 
-        
-        // 3. Add event listener for the filter form submission
         filterForm.addEventListener('submit', function(e) {
             e.preventDefault(); 
-            // When filters are applied (or re-applied), always start from page 1
             fetchRoutes(1); 
         });
     });
 
-    // --- CORE PAGINATION AND FETCH FUNCTION ---
+    // PAGINATION AND FETCH FUNCTION
 
     async function fetchRoutes(page = 1) {
         routeListContainer.innerHTML = `
@@ -231,11 +217,11 @@ $is_logged_in = isset($_SESSION['customer_logged_in']) && $_SESSION['customer_lo
         `;
         paginationContainer.innerHTML = ''; 
         
-        // Get current filter values (either pre-filled from URL or manually selected)
+        // filter values
         const fromCity = fromFilter.value !== 'Select City' ? fromFilter.value : '';
         const toCity = toFilter.value !== 'Select City' ? toFilter.value : '';
         
-        // Build query string with pagination and filter parameters
+        //query for pagination and filter
         const params = new URLSearchParams({
             page: page,
             from: fromCity,
@@ -254,7 +240,6 @@ $is_logged_in = isset($_SESSION['customer_logged_in']) && $_SESSION['customer_lo
 
             if (data.success) {
                 renderRouteCards(data.routes);
-                // CRITICAL: Ensure data.total_pages and data.current_page exist
                 renderPagination(data.current_page, data.total_pages); 
             } else {
                 throw new Error(data.message || 'Failed to retrieve route data.');
@@ -272,9 +257,7 @@ $is_logged_in = isset($_SESSION['customer_logged_in']) && $_SESSION['customer_lo
             paginationContainer.innerHTML = ''; 
         }
     }
-
-    // --- HELPER FUNCTIONS ---
-
+    //SEARCH FUNCTIONS
     function renderRouteCards(routes) {
         routeListContainer.innerHTML = ''; 
 

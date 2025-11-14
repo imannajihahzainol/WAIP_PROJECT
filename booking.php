@@ -1,14 +1,12 @@
 <?php
 session_start();
-// Assuming a successful CUSTOMER login sets these session variables
 if (!isset($_SESSION['customer_logged_in']) || $_SESSION['customer_logged_in'] !== true) {
-    // Redirect to the customer login page if not logged in
+    //redirect to the customer login page if not logged in
     header('Location: user_login.html'); 
     exit;
 }
-
 $customer_id = $_SESSION['customer_id'];
-$route_id = $_GET['route_id'] ?? null; // Get the route_id from the URL query parameter
+$route_id = $_GET['route_id'] ?? null;
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -171,18 +169,18 @@ $route_id = $_GET['route_id'] ?? null; // Get the route_id from the URL query pa
     const seatCountSelect = document.getElementById('seatCount');
     const bookingForm = document.getElementById('bookingForm');
     
-    // Get Route ID from PHP environment variable/URL (passed via PHP)
+    //get route id from PHP 
     const routeId = '<?php echo $route_id; ?>'; 
     let currentBasePrice = 0.00; 
 
-    // Helper to update total price display
+    //update total price display
     function updateTotalPrice() {
         const seatCount = parseInt(seatCountSelect.value);
         const totalPrice = currentBasePrice * seatCount;
         totalPriceDisplay.textContent = `RM ${totalPrice.toFixed(2)}`;
     }
 
-    // Function to handle schedule selection
+    //handle schedule selection
     function handleScheduleSelection(button) {
         const row = button.closest('tr');
         const time = button.getAttribute('data-time');
@@ -193,16 +191,15 @@ $route_id = $_GET['route_id'] ?? null; // Get the route_id from the URL query pa
         scheduleTimeInput.value = time;
         selectedScheduleIdInput.value = scheduleId;
 
-        // Reset seat count to 1 and update price
+        //reset seat count to 1 and update price
         seatCountSelect.value = 1; 
         updateTotalPrice();
 
-        // Highlight selected row
+        //highlight selected row
         document.querySelectorAll('#scheduleTableBody tr').forEach(r => r.classList.remove('table-primary'));
         row.classList.add('table-primary');
     }
 
-    // Function to render the schedules table
     function renderSchedules(schedules) {
         scheduleTableBody.innerHTML = '';
         if (schedules.length === 0) {
@@ -227,16 +224,11 @@ $route_id = $_GET['route_id'] ?? null; // Get the route_id from the URL query pa
                 </td>
             `;
             scheduleTableBody.appendChild(row);
-
-            // Automatically select and highlight the first available schedule
             if (index === 0) { 
                 row.classList.add('table-primary');
-                // Use the data from the first schedule to initialize the summary
                 handleScheduleSelection(row.querySelector('.book-btn')); 
             }
         });
-        
-        // Add event listener delegation for select buttons
         scheduleTableBody.querySelectorAll('.book-btn').forEach(button => {
             button.addEventListener('click', function() {
                 handleScheduleSelection(this);
@@ -244,7 +236,7 @@ $route_id = $_GET['route_id'] ?? null; // Get the route_id from the URL query pa
         });
     }
 
-    // Fetch schedules API call
+    //fetch schedules API call
     async function fetchSchedules() {
         scheduleTableBody.innerHTML = `<tr><td colspan="4" class="text-center text-info">Loading schedules...</td></tr>`;
 
@@ -253,7 +245,7 @@ $route_id = $_GET['route_id'] ?? null; // Get the route_id from the URL query pa
             const data = await response.json();
 
             if (data.success) {
-                // Update header
+                //update header
                 routeDisplayHeader.innerHTML = `${data.route_name} | Date: ${new Date().toISOString().slice(0, 10)}`; 
                 renderSchedules(data.schedules);
             } else {
@@ -264,8 +256,6 @@ $route_id = $_GET['route_id'] ?? null; // Get the route_id from the URL query pa
             scheduleTableBody.innerHTML = `<tr><td colspan="4" class="text-center text-danger">Failed to load schedules: ${error.message}</td></tr>`;
         }
     }
-
-    // Initialize on load
     document.addEventListener('DOMContentLoaded', function() {
         if (routeId) {
             fetchSchedules();
@@ -273,43 +263,32 @@ $route_id = $_GET['route_id'] ?? null; // Get the route_id from the URL query pa
             routeTableBody.innerHTML = `<tr><td colspan="4" class="text-center text-danger">No Route ID specified. Please select a route first.</td></tr>`;
         }
         seatCountSelect.addEventListener('change', updateTotalPrice);
-        
-        // TODO: Attach the booking submission logic here
         bookingForm.addEventListener('submit', handleBookingSubmission);
     });
 
-    // --- FINAL Booking Submission Logic (in booking.php script block) ---
 async function handleBookingSubmission(e) {
     e.preventDefault();
-    
-    // Ensure the user has selected a schedule and seat count > 0
     if (!selectedScheduleIdInput.value || parseInt(seatCountSelect.value) <= 0) {
         alert("Please select a schedule and the number of seats.");
         return;
     }
-
     const bookingForm = document.getElementById('bookingForm');
     const formData = new FormData(bookingForm); 
-    
-    // Manually append the total price to send it for verification/storage
     const totalPrice = totalPriceDisplay.textContent.replace('RM ', '');
     formData.append('total_price', totalPrice);
-
     try {
         const response = await fetch(`${API_BASE_URL}/api/create_booking.php`, {
             method: 'POST',
-            body: formData // Sends the schedule_id, seatCount, and total_price
+            body: formData 
         });
 
         const data = await response.json();
 
         if (response.ok && data.success) {
             alert(`Booking successful! ID: BK${data.booking_id}. Redirecting to history.`);
-            window.location.href = 'booking_history.php'; // Redirect to the final history page
+            window.location.href = 'booking_history.php'; //redirect to the final history page
         } else if (data.message.includes("seats remaining")) {
-            // Specific error handling for sold out/availability
             alert(`Booking failed: ${data.message}`);
-            // Re-fetch schedules to update availability status on the table
             fetchSchedules(); 
         } else {
             alert(`Booking failed: ${data.message || 'An unknown error occurred on the server.'}`);

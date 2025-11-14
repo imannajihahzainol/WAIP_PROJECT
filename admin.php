@@ -1,15 +1,13 @@
 <?php
-// PHP Security Check - MUST be at the top of the file
 session_start();
 
-// Check if the admin is logged in (using the session variable set during admin_login)
+//check if the admin is logged in
 if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
-    // Corrected redirect
     header('Location: admin_login.php'); 
     exit; 
 }
 
-$admin_username = $_SESSION['admin_username'] ?? 'Admin User'; // Assuming you set username in session during login
+$admin_username = $_SESSION['admin_username'] ?? 'Admin User'; 
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -175,21 +173,12 @@ $admin_username = $_SESSION['admin_username'] ?? 'Admin User'; // Assuming you s
             fetchDashboardData();
             fetchRecentBookings(); 
         });
-        
-        // --- Cancellation/Edit Listener Removed ---
-        // The event listener on recentBookingsBody is removed since the buttons are no longer rendered.
-
-        // --- Cancellation Function for Admin (REMOVED: The logic is now unnecessary for this file) ---
-        // async function cancelBookingAdmin(bookingId) { /* ... */ } 
-        
-        // --- Core Data Fetch Functions (Unchanged) ---
-        
         async function fetchDashboardData() {
             try {
                 const response = await fetch(`${API_BASE_URL}/api/get_admin_reports.php`);
                 
                 if (response.status === 401) {
-                     window.location.href = 'admin_login.php'; // Corrected to .php
+                     window.location.href = 'admin_login.php';
                      return;
                 }
 
@@ -217,8 +206,6 @@ $admin_username = $_SESSION['admin_username'] ?? 'Admin User'; // Assuming you s
                 Object.values(dashboardCards).forEach(el => el.textContent = 'Fail');
             }
         }
-        
-        // --- IMPLEMENTATION: Function to fetch and render the recent bookings table (MODIFIED) ---
         async function fetchRecentBookings() {
             recentBookingsBody.innerHTML = '<tr><td colspan="5" class="text-center text-muted"><span class="spinner-border spinner-border-sm me-2"></span> Loading...</td></tr>';
             
@@ -244,16 +231,13 @@ $admin_username = $_SESSION['admin_username'] ?? 'Admin User'; // Assuming you s
             }
         }
         
-        // --- Rendering Function for the Recent Bookings Table (MODIFIED) ---
+        //recent bookings table 
         function renderRecentBookingsTable(bookings) {
-            // Updated colspan count from 6 to 5
             if (bookings.length === 0) {
                 recentBookingsBody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">No recent bookings found.</td></tr>';
                 return;
             }
-
             recentBookingsBody.innerHTML = ''; 
-
             bookings.forEach(booking => {
                 const statusBadge = getStatusBadge(booking.booking_status);
                 
@@ -269,8 +253,6 @@ $admin_username = $_SESSION['admin_username'] ?? 'Admin User'; // Assuming you s
                 recentBookingsBody.insertAdjacentHTML('beforeend', row);
             });
         }
-
-        // --- Helper Function for Status Badge Styling (Unchanged) ---
         function getStatusBadge(status) {
             status = status.toUpperCase();
             let color = 'secondary';
@@ -280,7 +262,7 @@ $admin_username = $_SESSION['admin_username'] ?? 'Admin User'; // Assuming you s
             return `<span class="badge text-bg-${color} fw-semibold">${status}</span>`;
         }
         
-        // --- Chart Initialization Function (Unchanged) ---
+        //chart
         function renderChart(labels, counts) {
             const ctx = document.getElementById('routeBookingChart');
             

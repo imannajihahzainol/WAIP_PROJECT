@@ -1,7 +1,6 @@
 <?php
-// PHP Session Start and Status Check - MUST be at the very top
 session_start();
-// Check if user is logged in
+//check if user is logged in
 $is_logged_in = isset($_SESSION['customer_logged_in']) && $_SESSION['customer_logged_in'] === true;
 
 $customer_id = $_SESSION['customer_id'] ?? null;
@@ -192,36 +191,29 @@ $customer_id = $_SESSION['customer_id'] ?? null;
     document.addEventListener('DOMContentLoaded', function() {
         const searchForm = document.getElementById('searchForm');
         const departDateInput = document.getElementById('departDate');
-        const toInput = document.getElementById('toInput'); // Use ID for reliable access
+        const toInput = document.getElementById('toInput');
         
-        // --- Date Validation ---
         const today = new Date().toISOString().split('T')[0];
         if (departDateInput) {
             departDateInput.setAttribute('min', today);
         }
         
-        // --- Search Submission Logic ---
+        //search bar
         searchForm.addEventListener('submit', function(e) {
             e.preventDefault();
-            
-            // 1. Validation: Ensure the 'To' field is filled
             if (toInput.value.trim() === '') {
                 alert('Please enter a destination (To) to search for buses.');
                 toInput.focus();
-                return; // Stop the function if validation fails
+                return; 
             }
-
             const formData = new FormData(searchForm);
-            
             const params = new URLSearchParams();
             for (const [key, value] of formData.entries()) {
-                // Only include non-empty fields in the URL (excluding return date)
                 if (value.trim() !== '' && key !== 'return_date') {
                     params.append(key, value.trim());
                 }
             }
-
-            // Redirect to the routes page with search parameters
+            //redirect to the routes page with search parameters
             if (params.toString()) {
                 window.location.href = `routes.php?${params.toString()}`;
             } else {

@@ -1,7 +1,6 @@
 <?php
 session_start();
 require_once '../db_config.php'; 
-
 header('Content-Type: application/json');
 
 function sendResponse($success, $message, $http_code, $data = []) {
@@ -10,13 +9,11 @@ function sendResponse($success, $message, $http_code, $data = []) {
     exit;
 }
 
-// 1. Security Check
+//security check
 if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
     sendResponse(false, 'Unauthorized access.', 401);
 }
-
-// 2. SQL Query to fetch recent bookings
-// REVISION: JOINed with 'customer' (singular) and selected 'customer_username'
+//sql query to fetch recent bookings
 $sql = "SELECT 
             B.booking_id,
             B.booking_status,

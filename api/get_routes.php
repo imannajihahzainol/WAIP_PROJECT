@@ -1,6 +1,4 @@
 <?php
-// api/get_routes.php
-// Public endpoint for routes. No session check required.
 require_once '../db_config.php'; 
 
 header('Content-Type: application/json');
@@ -11,22 +9,19 @@ function sendResponse($success, $message, $http_code, $routes = [], $total_pages
         'success' => $success, 
         'message' => $message, 
         'routes' => $routes,
-        'total_pages' => $total_pages, // CRITICAL for pagination JS
-        'current_page' => $current_page // CRITICAL for pagination JS
+        'total_pages' => $total_pages, 
+        'current_page' => $current_page 
     ]);
     exit;
 }
 
-// --- PAGINATION & FILTER SETUP ---
-$limit = 4; // Display 4 routes per page (matches front-end look)
+// PAGINATION AND FILTER SETUP
+$limit = 4; //4 routes per page 
 $page = isset($_GET['page']) ? intval($_GET['page']) : 1;
 if ($page < 1) $page = 1;
 $offset = ($page - 1) * $limit;
-
 $fromCity = isset($_GET['from']) ? trim($_GET['from']) : '';
 $toCity = isset($_GET['to']) ? trim($_GET['to']) : '';
-
-// --- DYNAMIC WHERE CLAUSE ---
 $where_clauses = []; 
 
 if (!empty($fromCity) && $fromCity !== 'Select City') {
@@ -41,8 +36,7 @@ if (!empty($toCity) && $toCity !== 'Select City') {
 
 $where_sql = count($where_clauses) > 0 ? " WHERE " . implode(" AND ", $where_clauses) : "";
 
-
-// --- 1. COUNT QUERY (Total results with filters) ---
+//total results
 $count_sql = "SELECT 
                 COUNT(DISTINCT R.route_id) AS total_routes
               FROM ROUTES R
@@ -57,7 +51,6 @@ if ($count_result && $count_row = $count_result->fetch_assoc()) {
 }
 
 $total_pages = ceil($total_routes / $limit);
-// Re-adjust page if out of bounds (important when filters change)
 if ($page > $total_pages && $total_pages > 0) {
     $page = $total_pages;
     $offset = ($page - 1) * $limit;
@@ -65,7 +58,7 @@ if ($page > $total_pages && $total_pages > 0) {
     $page = 1;
 }
 
-// --- 2. MAIN QUERY (Paginated data with filters) ---
+//paginated data with filters
 $sql = "SELECT 
             R.route_id, 
             R.route_name, 
@@ -92,7 +85,6 @@ if ($result->num_rows > 0) {
             'route_id' => $row['route_id'],
             'route_name' => $row['route_name'],
             'route_desc' => $row['route_desc'],
-            // FIX: Ensure min_price is a string '0.00' if NULL (was causing 'RM undefined')
             'min_price' => $row['min_price'] ? number_format((float)$row['min_price'], 2, '.', '') : '0.00',
             'schedule_count' => (int)$row['schedule_count']
         ];

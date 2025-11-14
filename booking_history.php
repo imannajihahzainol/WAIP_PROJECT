@@ -1,9 +1,8 @@
 <?php
-// PHP Security Check - MUST be at the very top
 session_start();
-// Check if user is logged in
+// check if user is logged in
 if (!isset($_SESSION['customer_logged_in']) || $_SESSION['customer_logged_in'] !== true) {
-    // If not logged in, redirect them to the login page
+    // if not logged in, redirect them to the login page
     header('Location: user_login.php'); 
     exit;
 }
@@ -158,43 +157,37 @@ $is_logged_in = true; // Confirmed logged in
         document.addEventListener('DOMContentLoaded', function() {
             fetchBookings(currentFilter); 
 
-            // Filter button logic
+            // filter button
             filterButtons.forEach(button => {
                 button.addEventListener('click', function() {
                     let newFilter = this.getAttribute('data-status');
-
-                    // Update active button styling
                     filterButtons.forEach(btn => btn.classList.replace('btn-warning', 'btn-outline-secondary'));
                     filterButtons.forEach(btn => btn.classList.remove('text-white'));
-                    
                     this.classList.replace('btn-outline-secondary', 'btn-warning');
                     if (this.classList.contains('btn-warning')) {
                         this.classList.add('text-white');
                     } else if (newFilter === 'CANCELLED') {
-                        // Ensure Cancelled filter button uses danger style when not active
                         this.classList.replace('btn-warning', 'btn-outline-danger');
                     }
-                    
                     currentFilter = newFilter;
                     fetchBookings(currentFilter);
                 });
             });
 
-            // --- CANCELLATION EVENT LISTENER ---
+            //CANCELLATION
             bookingTableBody.addEventListener('click', function(e) {
                 const cancelBtn = e.target.closest('.cancel-btn');
                 if (cancelBtn) {
                     const bookingId = cancelBtn.dataset.id;
                     const bookingCode = `BK${bookingId}`;
-                    
-                    if (confirm(`Are you sure you want to cancel booking ${bookingCode}? This action cannot be undone and may incur cancellation fees.`)) {
+                    if (confirm(`Are you sure you want to cancel booking ${bookingCode}? No fee will be refunded.`)) {
                         cancelBooking(bookingId);
                     }
                 }
             });
         });
 
-        // --- Function to send cancellation request ---
+        //Function to send cancellation request
         async function cancelBooking(bookingId) {
             try {
                 const response = await fetch(`${API_BASE_URL}/api/cancel_booking.php`, {
@@ -209,7 +202,7 @@ $is_logged_in = true; // Confirmed logged in
 
                 if (data.success) {
                     alert(`Success: Booking BK${bookingId} has been successfully cancelled.`);
-                    // Refresh the current list to show the updated status
+                    // updated status
                     fetchBookings(currentFilter); 
                 } else {
                     alert(`Error cancelling booking: ${data.message}`);
@@ -220,9 +213,6 @@ $is_logged_in = true; // Confirmed logged in
                 alert('A network error occurred while trying to cancel the booking.');
             }
         }
-
-
-        // Helper to get status badge styling
         function getStatusBadge(status) {
             status = status.toUpperCase();
             let color = 'secondary';
@@ -231,12 +221,8 @@ $is_logged_in = true; // Confirmed logged in
             else if (status === 'CANCELLED') color = 'danger';
             return `<span class="badge text-bg-${color} fw-semibold">${status}</span>`;
         }
-
-        // Function to render the booking history table
         function renderBookings(bookings) {
             bookingTableBody.innerHTML = '';
-
-            // Updated colspan count to 7 (since 'Action' column remains)
             if (bookings.length === 0) {
                 bookingTableBody.innerHTML = `<tr><td colspan="8" class="text-center text-muted">No ${currentFilter ? currentFilter.toLowerCase() : 'active'} bookings found.</td></tr>`;
                 return;
@@ -251,15 +237,11 @@ $is_logged_in = true; // Confirmed logged in
                 const departDate = new Date(booking.depart_date);
                 const today = new Date();
                 today.setHours(0,0,0,0); 
-
-                // Logic to show/hide the Cancel button
                 if (booking.booking_status === 'CONFIRMED' && departDate >= today) {
-                    // REVISION: Removed "View Ticket" button
                     actionButtons = `
                         <button class="btn btn-sm btn-outline-danger cancel-btn" data-id="${booking.booking_id}">Cancel</button>
                     `;
                 } else if (booking.booking_status === 'COMPLETED' || (booking.booking_status === 'CONFIRMED' && departDate < today)) {
-                    // REVISION: Removed "View Ticket" button and kept only disabled Review button
                     actionButtons = `
                         <button class="btn btn-sm btn-outline-secondary" disabled>Review</button>
                     `;
@@ -282,7 +264,7 @@ $is_logged_in = true; // Confirmed logged in
             });
         }
 
-        // Fetch API call (now includes logic to handle session expiry implicitly)
+        // fetch API call
         async function fetchBookings(filter) {
             bookingTableBody.innerHTML = `<tr><td colspan="8" class="text-center text-info py-3"><span class="spinner-border spinner-border-sm me-2"></span> Loading ${filter ? filter.toLowerCase() : 'all'} bookings...</td></tr>`;
 
@@ -294,7 +276,6 @@ $is_logged_in = true; // Confirmed logged in
                 if (data.success) {
                     renderBookings(data.bookings);
                 } else if (response.status === 401) {
-                    // Redirect if unauthorized (session expired - handled by get_bookings.php)
                     window.location.href = 'user_login.php';
                 } else {
                     throw new Error(data.message || 'Failed to load booking history.');

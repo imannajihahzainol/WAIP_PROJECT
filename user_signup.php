@@ -14,9 +14,8 @@
     <link rel="stylesheet" href="assets/css/style.css">
     
     <style>
-        /* Placeholder for your external CSS login-page styling */
         .login-page {
-            background-color: #5B21B6; /* Deep Purple, inferred from screenshot */
+            background-color: #5B21B6; 
         }
         .login-card {
             max-width: 400px;
@@ -24,7 +23,7 @@
             border: none;
         }
         .custom-icon {
-            color: #d7820b; /* Orange color for icons */
+            color: #d7820b; 
         }
         .btn-warning {
             background-color: #d7820b !important;
@@ -100,7 +99,6 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // --- REVISED: Use XAMPP path ---
         const API_BASE_URL = 'http://localhost/WAIP_PROJECT'; 
         const form = document.getElementById('signupForm');
         const messageContainer = document.getElementById('messageContainer');
@@ -129,7 +127,6 @@
             const password = form.password.value;
             const confirmPassword = form.confirmPassword.value;
 
-            // 1. Client-Side Validation
             if (password !== confirmPassword) {
                 return showMessage("Passwords do not match.", true);
             }
@@ -137,31 +134,27 @@
                 return showMessage("Password must be at least 5 characters.", true);
             }
 
-            // 2. Prepare Payload
             const payload = {
                 username: username,
                 email: email,
                 password: password,
-                // Role is set implicitly by using the customer table
             };
             
             showLoading(true);
 
-            // 3. API Call to Backend
+            //API Call to Backend
             try {
-                // --- REVISED: Use correct PHP endpoint ---
                 const response = await fetch(`${API_BASE_URL}/api/register_user.php`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    // Send data as JSON, which the PHP script is configured to read
                     body: JSON.stringify(payload) 
                 });
                 
                 const data = await response.json();
 
-                if (response.ok && data.success) { // Check both response status and custom 'success' flag
+                if (response.ok && data.success) { 
                     showMessage("Registration successful! Redirecting to login...", false);
                     
                     setTimeout(() => {
@@ -169,7 +162,6 @@
                     }, 1500);
 
                 } else {
-                    // Handle errors from the PHP script
                     const errorMessage = data.message || 'Registration failed due to server error.';
                     showMessage(errorMessage, true);
                 }
