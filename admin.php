@@ -1,7 +1,7 @@
 <?php
 session_start();
 
-//check if the admin is logged in
+// Check if the admin is logged in (using the session variable set during admin_login)
 if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
     header('Location: admin_login.php'); 
     exit; 
@@ -192,6 +192,7 @@ $admin_username = $_SESSION['admin_username'] ?? 'Admin User';
                     dashboardCards.pendingTicketsCount.textContent = reportData.pendingTicketsCount;
                     dashboardCards.newUsersCount.textContent = reportData.newUsersCount;
 
+                    // The API now sends combined labels like 'Route Name (Time)'
                     const chartLabels = reportData.routeSummary.map(r => r.route_name);
                     const chartCounts = reportData.routeSummary.map(r => parseInt(r.total_seats_booked));
 
@@ -206,6 +207,7 @@ $admin_username = $_SESSION['admin_username'] ?? 'Admin User';
                 Object.values(dashboardCards).forEach(el => el.textContent = 'Fail');
             }
         }
+        
         async function fetchRecentBookings() {
             recentBookingsBody.innerHTML = '<tr><td colspan="5" class="text-center text-muted"><span class="spinner-border spinner-border-sm me-2"></span> Loading...</td></tr>';
             
@@ -302,7 +304,8 @@ $admin_username = $_SESSION['admin_username'] ?? 'Admin User';
                         },
                         title: {
                             display: true,
-                            text: 'Top Routes by Seats Booked'
+                            // TITLE IS UPDATED TO REFLECT SCHEDULE FOCUS
+                            text: 'Top Schedules by Seats Booked'
                         }
                     }
                 }

@@ -9,7 +9,7 @@ function sendResponse($success, $message, $http_code, $data = null) {
     exit;
 }
 
-//security check
+// Security check
 if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
     sendResponse(false, 'Authorization required.', 401);
 }
@@ -21,7 +21,9 @@ $report_data = [];
 $stmt1 = $stmt2 = $stmt3 = $stmt4 = null; 
 
 try {
-    // query for total bookings
+    // ... (Queries 1-4 for Total Bookings, Active Routes, New Users, Future Tickets remain unchanged)
+    
+    // query total bookings
     $query_total_bookings = "SELECT COUNT(booking_id) AS total FROM BOOKINGS WHERE booking_status = 'CONFIRMED' AND booking_time >= ?";
     $stmt1 = $conn->prepare($query_total_bookings);
     $stmt1->bind_param("s", $last_month_start);
@@ -62,16 +64,18 @@ try {
     $stmt4->close();
 
 
-    //query route booking summary
+    // --- REVISED Query 5: Route Booking Summary (Grouped by Route AND Time) ---
     $query_route_summary = "
         SELECT 
             R.route_name, 
+            S.depart_time, 
             SUM(SUBSTRING_INDEX(B.seat_num, ' ', 1)) AS total_seats_booked
         FROM ROUTES R
         JOIN SCHEDULES S ON R.route_id = S.route_id
         JOIN BOOKINGS B ON S.schedule_id = B.schedule_id
         WHERE B.booking_status = 'CONFIRMED'
-        GROUP BY R.route_name
+        -- CRITICAL CHANGE: Group by both Route Name and Departure Time
+        GROUP BY R.route_name, S.depart_time
         ORDER BY total_seats_booked DESC
         LIMIT 5";
         
@@ -79,8 +83,10 @@ try {
     $route_data = [];
     if ($route_summary_result) {
         while ($row = $route_summary_result->fetch_assoc()) {
+            // Combine name and time for the front-end label
+            $combined_label = $row['route_name'] . ' (' . substr($row['depart_time'], 0, 5) . ')';
             $route_data[] = [
-                'route_name' => $row['route_name'],
+                'route_name' => $combined_label, // Send the combined label
                 'total_seats_booked' => (int)$row['total_seats_booked']
             ];
         }
